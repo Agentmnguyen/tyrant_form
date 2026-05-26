@@ -1,4 +1,5 @@
 import "server-only";
+import { deleteParticipationEntryWithDeps, deletePlayerWithDeps } from "@/lib/deleteServices";
 import { generateEventNames } from "@/lib/eventNaming";
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { normalizePlayerGameId } from "@/lib/rosterValidation";
@@ -198,6 +199,23 @@ export async function getParticipationEntry(id: string) {
   return mapParticipationEntry(data as ParticipationEntryRow);
 }
 
+export async function getPlayer(id: string) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase.from("players").select("*").eq("id", id).maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    const notFound = new Error("Player was not found.");
+    notFound.name = "NotFoundError";
+    throw notFound;
+  }
+
+  return mapPlayer(data as PlayerRow);
+}
+
 export async function startNewEvent(eventType: EventType) {
   const supabase = getSupabaseAdmin();
   const existingEvents = await listEvents();
@@ -379,6 +397,46 @@ export async function updateSheetSyncStatus(id: string, status: SheetSyncStatus,
   }
 
   return mapParticipationEntry(data as ParticipationEntryRow);
+}
+
+export async function deleteParticipationEntry(id: string) {
+  const supabase = getSupabaseAdmin();
+  return deleteParticipationEntryWithDeps(id, {
+    getEntry: getParticipationEntry,
+    deleteEntry: async (entryId) => {
+      const { error } = await supabase.from("participation_entries").delete().eq("id", entryId);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    }
+  });
+}
+
+export async function deletePlayer(playerId: string) {
+  const supabase = getSupabaseAdmin();
+  return deletePlayerWithDeps(playerId, {
+    getPlayer,
+    getParticipationCount: async (id) => {
+      const { count, error } = await supabase
+        .from("participation_entries")
+        .select("id", { count: "exact", head: true })
+        .eq("player_id", id);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return count || 0;
+    },
+    deletePlayer: async (id) => {
+      const { error } = await supabase.from("players").delete().eq("id", id);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    }
+  });
 }
 
 async function upsertPlayer(payload: { playerGameId: string; playerName: string; alliance: Alliance }) {

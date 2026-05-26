@@ -161,7 +161,7 @@ export function RosterSignupWizard() {
     <main className="app-shell narrow">
       <Hero
         title={ROSTER_CONFIG.appName}
-        subtitle="Submit your participation for the current state event."
+        subtitle="Submit your participation for the currently open event."
         pill={selectedEvent ? selectedEvent.name : "Event participation"}
       />
 

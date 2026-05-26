@@ -988,6 +988,39 @@ button:focus-visible {
   gap: 8px;
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(1, 6, 12, 0.72);
+  padding: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.confirm-modal {
+  width: min(100%, 430px);
+  display: grid;
+  gap: 18px;
+  border: 1px solid rgba(255, 123, 114, 0.35);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 123, 114, 0.08), transparent 150px),
+    var(--panel-2);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.56);
+  padding: 18px;
+}
+
+.confirm-modal h2 {
+  margin-bottom: 8px;
+  font-size: 26px;
+}
+
+.confirm-modal p {
+  margin-bottom: 0;
+}
+
 .alliance-badge {
   display: inline-flex;
   align-items: center;

@@ -11,6 +11,7 @@ Next.js App Router app for shared 1474 event participation tracking across SVS a
 - One globally open public event at a time
 - Admin event lifecycle: draft, open, locked, archived
 - Player and participation editing
+- Admin-only cleanup deletes for participation entries and players without entries
 - Supabase source of truth
 - Google Sheets sync to `MASTER_PLAYERS`, `MASTER_PARTICIPATION`, and event-specific tabs
 - Event tab names such as `SVS - May 2026`, `Frost Dragon Tyrant - May 2026`, and `#2` suffixes for same-type duplicates
@@ -60,6 +61,7 @@ For Google Sheets sync, enable the Google Sheets API, create a service account k
 - Legacy `tyrant_events` copy into `events` as `Frost Dragon Tyrant`.
 - Legacy `tyrant_submissions` copy into `players` and `participation_entries`.
 - Existing roster `heroes` values are copied into the new rally/defense hero arrays where names overlap. The legacy `heroes` and `notes` columns may remain for compatibility but are not written by the current app.
+- Google Sheets participation and player deletes are marked with `Row Status = deleted` and `Deleted At` instead of physically removing rows.
 
 Before adding the global open-event index, lock or close extra open events if more than one event currently has `status = 'open'`.
 

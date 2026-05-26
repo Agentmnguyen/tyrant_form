@@ -12,6 +12,7 @@ import {
   Save,
   Search,
   ShieldCheck,
+  Trash2,
   Undo2,
   Unlock,
   X
@@ -43,6 +44,13 @@ type RosterAdminData = {
 
 type SubmittedFilter = "all" | "submitted" | "not_submitted";
 
+type ConfirmDialogState = {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  onConfirm: () => Promise<void>;
+};
+
 export function RosterAdminDashboard() {
   const [pin, setPin] = useState("");
   const [events, setEvents] = useState<RosterEvent[]>([]);
@@ -68,6 +76,7 @@ export function RosterAdminDashboard() {
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
   const [playerEdit, setPlayerEdit] = useState<{ playerGameId: string; playerName: string; alliance: string } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmDialogState | null>(null);
 
   const activeEvents = events.filter((event) => event.status !== "archived");
   const pastEvents = events.filter((event) => event.status === "archived");
@@ -199,6 +208,44 @@ export function RosterAdminDashboard() {
 
   async function retrySync(entry: ParticipationEntry) {
     await runMutation("/api/admin/retry-sync", { participationEntryId: entry.id }, "Google Sheets sync retried.");
+  }
+
+  function requestDeleteEntry(entry: ParticipationEntry) {
+    setConfirmDialog({
+      title: "Delete Submission",
+      message: "Delete this submission? This cannot be undone.",
+      confirmLabel: "Delete Submission",
+      onConfirm: async () => {
+        await runMutation("/api/admin/participation/delete", { participationEntryId: entry.id }, "Participation deleted.");
+      }
+    });
+  }
+
+  function requestDeletePlayer(player: Player) {
+    const participationCount = entries.filter((entry) => entry.player.id === player.id).length;
+
+    if (participationCount > 0) {
+      setMessage({
+        type: "error",
+        text: `${player.playerName} has ${participationCount} participation entr${participationCount === 1 ? "y" : "ies"}. Delete those entries before deleting the player.`
+      });
+      return;
+    }
+
+    setConfirmDialog({
+      title: "Delete Player",
+      message: "Delete this player? This cannot be undone.",
+      confirmLabel: "Delete Player",
+      onConfirm: async () => {
+        await runMutation("/api/admin/player/delete", { playerUuid: player.id }, "Player deleted.");
+      }
+    });
+  }
+
+  async function confirmDelete() {
+    if (!confirmDialog) return;
+    await confirmDialog.onConfirm();
+    setConfirmDialog(null);
   }
 
   async function runMutation(
@@ -348,6 +395,16 @@ export function RosterAdminDashboard() {
       <Hero title={ROSTER_CONFIG.appName} subtitle="Manage 1474 players, active events, participation entries, and reporting sync." />
 
       {message && <div className={`message ${message.type}`}>{message.text}</div>}
+      {confirmDialog && (
+        <ConfirmDialog
+          confirmLabel={confirmDialog.confirmLabel}
+          loading={loading}
+          message={confirmDialog.message}
+          onCancel={() => setConfirmDialog(null)}
+          onConfirm={confirmDelete}
+          title={confirmDialog.title}
+        />
+      )}
 
       {!loaded ? (
         <section className="panel login-panel">
@@ -564,6 +621,7 @@ export function RosterAdminDashboard() {
                 onRetrySync={retrySync}
                 onSaveEdit={saveEntryEdit}
                 onStartEdit={startEntryEdit}
+                onRequestDelete={requestDeleteEntry}
                 updateEdit={updateEdit}
               />
             )}
@@ -615,6 +673,10 @@ export function RosterAdminDashboard() {
                         <Button size="small" variant="secondary" onClick={() => startPlayerEdit(player)} disabled={loading}>
                           <Pencil aria-hidden="true" />
                           Edit Player
+                        </Button>
+                        <Button size="small" variant="danger" onClick={() => requestDeletePlayer(player)} disabled={loading}>
+                          <Trash2 aria-hidden="true" />
+                          Delete Player
                         </Button>
                       </div>
                     </>
@@ -717,6 +779,7 @@ function ParticipationList({
   onSaveEdit,
   onCancelEdit,
   onRetrySync,
+  onRequestDelete,
   updateEdit
 }: {
   entries: ParticipationEntry[];
@@ -728,6 +791,7 @@ function ParticipationList({
   onSaveEdit: () => void;
   onCancelEdit: () => void;
   onRetrySync: (entry: ParticipationEntry) => void;
+  onRequestDelete: (entry: ParticipationEntry) => void;
   updateEdit: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
   return (
@@ -778,6 +842,10 @@ function ParticipationList({
                   <Button size="small" variant="secondary" onClick={() => onStartEdit(entry)} disabled={loading}>
                     <Pencil aria-hidden="true" />
                     Edit
+                  </Button>
+                  <Button size="small" variant="danger" onClick={() => onRequestDelete(entry)} disabled={loading}>
+                    <Trash2 aria-hidden="true" />
+                    Delete
                   </Button>
                   {entry.sheetSyncStatus === "sheet_sync_failed" && (
                     <Button size="small" variant="secondary" onClick={() => onRetrySync(entry)} disabled={loading}>
@@ -980,6 +1048,43 @@ function NotSubmittedList({ players, selectedEvent }: { players: Player[]; selec
           </article>
         ))
       )}
+    </div>
+  );
+}
+
+function ConfirmDialog({
+  title,
+  message,
+  confirmLabel,
+  loading,
+  onCancel,
+  onConfirm
+}: {
+  title: string;
+  message: string;
+  confirmLabel: string;
+  loading: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="modal-backdrop" role="presentation">
+      <section aria-modal="true" className="confirm-modal" role="dialog" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+        <div>
+          <span className="eyebrow-text">Confirm</span>
+          <h2 id="confirm-title">{title}</h2>
+          <p id="confirm-message">{message}</p>
+        </div>
+        <div className="assign-actions">
+          <Button variant="secondary" onClick={onCancel} disabled={loading}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={onConfirm} disabled={loading}>
+            <Trash2 aria-hidden="true" />
+            {loading ? "Deleting" : confirmLabel}
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

@@ -15,7 +15,9 @@ const PLAYER_HEADERS = [
   "Player Name",
   "Alliance",
   "Created At",
-  "Updated At"
+  "Updated At",
+  "Row Status",
+  "Deleted At"
 ];
 
 const PARTICIPATION_HEADERS = [
@@ -41,7 +43,9 @@ const PARTICIPATION_HEADERS = [
   "Edited At",
   "Sheet Sync Status",
   "Sheet Synced At",
-  "Sheet Error"
+  "Sheet Error",
+  "Row Status",
+  "Deleted At"
 ];
 
 type SheetProperties = {
@@ -65,6 +69,30 @@ export async function syncParticipationToGoogleSheets(entry: ParticipationEntry)
   }
 }
 
+export async function markParticipationDeletedInGoogleSheets(entry: ParticipationEntry) {
+  assertGoogleSheetsConfig();
+  const sheets = [ROSTER_CONFIG.masterParticipationSheetName, entry.event.googleSheetTabName];
+  await ensureSheet(...sheets);
+  await writeParticipationHeaders(...sheets);
+
+  for (const sheet of sheets) {
+    await markParticipationDeleted(sheet, entry);
+  }
+}
+
+export async function markPlayerDeletedInGoogleSheets(player: Player) {
+  assertGoogleSheetsConfig();
+  await ensureSheet(ROSTER_CONFIG.masterPlayersSheetName);
+  await writePlayerHeaders(ROSTER_CONFIG.masterPlayersSheetName);
+
+  const rows = await findRowsById(ROSTER_CONFIG.masterPlayersSheetName, PLAYER_ID_COLUMN, player.id);
+  const values = [playerRow(player, { rowStatus: "deleted", deletedAt: new Date().toISOString() })];
+
+  for (const rowNumber of rows) {
+    await updateValues(sheetRange(ROSTER_CONFIG.masterPlayersSheetName, `A${rowNumber}:H${rowNumber}`), values);
+  }
+}
+
 export async function ensureEventSheet(event: RosterEvent) {
   assertGoogleSheetsConfig();
   await ensureSheet(ROSTER_CONFIG.masterPlayersSheetName, ROSTER_CONFIG.masterParticipationSheetName, event.googleSheetTabName);
@@ -79,6 +107,15 @@ export function getGoogleSheetsConfigStatus() {
     googleServiceAccountEmail: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL),
     googlePrivateKey: Boolean(process.env.GOOGLE_PRIVATE_KEY)
   };
+}
+
+export function isGoogleSheetsSyncEnabled() {
+  const config = getGoogleSheetsConfigStatus();
+  return (
+    (config.googleSheetId || config.legacyGoogleSheetsSpreadsheetId) &&
+    config.googleServiceAccountEmail &&
+    config.googlePrivateKey
+  );
 }
 
 function assertGoogleSheetsConfig() {
@@ -111,12 +148,12 @@ async function ensureSheet(...sheetNames: string[]) {
 }
 
 async function writePlayerHeaders(sheetName: string) {
-  await updateValues(sheetRange(sheetName, "A1:F1"), [PLAYER_HEADERS]);
+  await updateValues(sheetRange(sheetName, "A1:H1"), [PLAYER_HEADERS]);
 }
 
 async function writeParticipationHeaders(...sheetNames: string[]) {
   for (const sheetName of sheetNames) {
-    await updateValues(sheetRange(sheetName, "A1:W1"), [PARTICIPATION_HEADERS]);
+    await updateValues(sheetRange(sheetName, "A1:Y1"), [PARTICIPATION_HEADERS]);
   }
 }
 
@@ -125,12 +162,12 @@ async function upsertPlayer(player: Player) {
   const values = [playerRow(player)];
 
   if (rows.length === 0) {
-    await appendValues(sheetRange(ROSTER_CONFIG.masterPlayersSheetName, "A:F"), values);
+    await appendValues(sheetRange(ROSTER_CONFIG.masterPlayersSheetName, "A:H"), values);
     return;
   }
 
   for (const rowNumber of rows) {
-    await updateValues(sheetRange(ROSTER_CONFIG.masterPlayersSheetName, `A${rowNumber}:F${rowNumber}`), values);
+    await updateValues(sheetRange(ROSTER_CONFIG.masterPlayersSheetName, `A${rowNumber}:H${rowNumber}`), values);
   }
 }
 
@@ -139,12 +176,21 @@ async function upsertParticipation(sheetName: string, entry: ParticipationEntry)
   const values = [participationRow(entry)];
 
   if (rows.length === 0) {
-    await appendValues(sheetRange(sheetName, "A:W"), values);
+    await appendValues(sheetRange(sheetName, "A:Y"), values);
     return;
   }
 
   for (const rowNumber of rows) {
-    await updateValues(sheetRange(sheetName, `A${rowNumber}:W${rowNumber}`), values);
+    await updateValues(sheetRange(sheetName, `A${rowNumber}:Y${rowNumber}`), values);
+  }
+}
+
+async function markParticipationDeleted(sheetName: string, entry: ParticipationEntry) {
+  const rows = await findRowsById(sheetName, PARTICIPATION_ID_COLUMN, entry.id);
+  const values = [participationRow(entry, { rowStatus: "deleted", deletedAt: new Date().toISOString() })];
+
+  for (const rowNumber of rows) {
+    await updateValues(sheetRange(sheetName, `A${rowNumber}:Y${rowNumber}`), values);
   }
 }
 
@@ -153,18 +199,20 @@ async function findRowsById(sheetName: string, column: string, id: string) {
   return (response.values || []).flatMap((row, index) => (index > 0 && row[0] === id ? [index + 1] : []));
 }
 
-function playerRow(player: Player) {
+function playerRow(player: Player, override: { rowStatus?: string; deletedAt?: string } = {}) {
   return [
     player.id,
     player.playerId,
     player.playerName,
     player.alliance,
     player.createdAt,
-    player.updatedAt
+    player.updatedAt,
+    override.rowStatus || "active",
+    override.deletedAt || ""
   ];
 }
 
-function participationRow(entry: ParticipationEntry) {
+function participationRow(entry: ParticipationEntry, override: { rowStatus?: string; deletedAt?: string } = {}) {
   return [
     entry.id,
     entry.event.id,
@@ -188,7 +236,9 @@ function participationRow(entry: ParticipationEntry) {
     entry.editedAt,
     entry.sheetSyncStatus,
     entry.sheetSyncedAt || "",
-    entry.sheetError || ""
+    entry.sheetError || "",
+    override.rowStatus || "active",
+    override.deletedAt || ""
   ];
 }
 

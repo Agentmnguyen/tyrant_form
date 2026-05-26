@@ -363,9 +363,9 @@ revoke all on table public.participation_entries from anon;
 revoke all on table public.participation_entries from authenticated;
 
 grant usage on schema public to service_role;
-grant select, insert, update on table public.players to service_role;
+grant select, insert, update, delete on table public.players to service_role;
 grant select, insert, update on table public.events to service_role;
-grant select, insert, update on table public.participation_entries to service_role;
+grant select, insert, update, delete on table public.participation_entries to service_role;
 
 create policy players_service_role_select
   on public.players
@@ -385,6 +385,12 @@ create policy players_service_role_update
   to service_role
   using (true)
   with check (true);
+
+create policy players_service_role_delete
+  on public.players
+  for delete
+  to service_role
+  using (true);
 
 create policy events_service_role_select
   on public.events
@@ -423,6 +429,12 @@ create policy participation_entries_service_role_update
   to service_role
   using (true)
   with check (true);
+
+create policy participation_entries_service_role_delete
+  on public.participation_entries
+  for delete
+  to service_role
+  using (true);
 
 revoke all on function public.touch_updated_at() from public;
 revoke all on function public.touch_updated_at() from anon;
