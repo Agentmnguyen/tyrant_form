@@ -8,12 +8,13 @@ Next.js App Router app for shared 1474 event participation tracking across SVS a
 - One shared admin dashboard for all event types
 - Persistent players across events
 - Normalized events and participation entries
-- One open public event per event type
+- One globally open public event at a time
 - Admin event lifecycle: draft, open, locked, archived
 - Player and participation editing
 - Supabase source of truth
 - Google Sheets sync to `MASTER_PLAYERS`, `MASTER_PARTICIPATION`, and event-specific tabs
 - Event tab names such as `SVS - May 2026`, `Frost Dragon Tyrant - May 2026`, and `#2` suffixes for same-type duplicates
+- Split rally join and defense join hero readiness fields
 
 ## Setup
 
@@ -50,7 +51,7 @@ For Google Sheets sync, enable the Google Sheets API, create a service account k
 
 - `players`: persistent Player ID, player name, alliance.
 - `events`: event type, name, month/year label, status, lifecycle dates, Google Sheet tab name.
-- `participation_entries`: one player in one event, with availability, troop readiness, hero readiness, notes, timestamps, and sync status.
+- `participation_entries`: one player in one event, with availability, troop readiness, rally join heroes, defense join heroes, timestamps, and sync status.
 
 ## Migration Notes
 
@@ -58,5 +59,8 @@ For Google Sheets sync, enable the Google Sheets API, create a service account k
 
 - Legacy `tyrant_events` copy into `events` as `Frost Dragon Tyrant`.
 - Legacy `tyrant_submissions` copy into `players` and `participation_entries`.
+- Existing roster `heroes` values are copied into the new rally/defense hero arrays where names overlap. The legacy `heroes` and `notes` columns may remain for compatibility but are not written by the current app.
+
+Before adding the global open-event index, lock or close extra open events if more than one event currently has `status = 'open'`.
 
 Review migrated data before manually removing any legacy tables. The destructive step, if desired later, should be done separately after backup and verification.

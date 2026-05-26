@@ -18,7 +18,13 @@ import {
 } from "lucide-react";
 import { ChoiceToggle, Field, SelectField, TextInput } from "@/components/FormControls";
 import { Button, Hero, StatCard, SyncBadge, cx } from "@/components/ui";
-import { NONE_HERO_OPTION, ROSTER_CONFIG, type EventType, type HeroOption } from "@/lib/rosterConfig";
+import {
+  ROSTER_CONFIG,
+  allHeroOptions,
+  type DefenseJoinHeroOption,
+  type EventType,
+  type RallyJoinHeroOption
+} from "@/lib/rosterConfig";
 import type { AdminSortKey, ParticipationEntry, ParticipationForm, Player, RosterEvent } from "@/lib/rosterTypes";
 import { toggleHeroSelection, validateForm } from "@/lib/rosterValidation";
 
@@ -98,7 +104,10 @@ export function RosterAdminDashboard() {
           heliosFilter === "all" ||
           (heliosFilter === "yes" && (entry.infantryHelios || entry.lancerHelios || entry.marksmenHelios)) ||
           (heliosFilter === "no" && !entry.infantryHelios && !entry.lancerHelios && !entry.marksmenHelios);
-        const heroOk = heroFilter === "all" || entry.heroes.includes(heroFilter as HeroOption);
+        const heroOk =
+          heroFilter === "all" ||
+          entry.rallyJoinHeroes.includes(heroFilter as RallyJoinHeroOption) ||
+          entry.defenseJoinHeroes.includes(heroFilter as DefenseJoinHeroOption);
         return searchOk && eventTypeOk && eventOk && archivedOk && allianceOk && availabilityOk && fcOk && heliosOk && heroOk;
       })
       .sort((a, b) => compareEntries(a, b, sortKey, sortDirection));
@@ -160,7 +169,7 @@ export function RosterAdminDashboard() {
         if (
           conflict?.openEvent &&
           window.confirm(
-            `${conflict.openEvent.name} is already open for ${event.eventType}. Lock it and open ${event.name}?`
+            `${conflict.openEvent.name} is already open. Lock it and open ${event.name}?`
           )
         ) {
           await openEvent(event, true);
@@ -361,7 +370,7 @@ export function RosterAdminDashboard() {
             <div>
               <span className="eyebrow-text">Event Controls</span>
               <strong>Active Events</strong>
-              <p>One event per event type can be open to public participation.</p>
+              <p>Only one event can be open to public participation at a time.</p>
             </div>
             <div className="event-actions">
               <Button variant="primary" onClick={() => startEvent("SVS")} disabled={loading}>
@@ -378,7 +387,7 @@ export function RosterAdminDashboard() {
           <section className="summary-grid">
             <StatCard label="Players" value={players.length} />
             <StatCard label="Participation entries" value={entries.length} />
-            <StatCard label="Open events" value={openEvents.length} tone="success" />
+            <StatCard label="Open event" value={openEvents.length} tone="success" />
             <StatCard label="Archived events" value={pastEvents.length} />
             <StatCard label="Failed syncs" value={failedSyncs} tone={failedSyncs > 0 ? "warning" : "default"} />
           </section>
@@ -500,7 +509,7 @@ export function RosterAdminDashboard() {
                 <SelectField
                   placeholder="All heroes"
                   value={heroFilter === "all" ? "" : heroFilter}
-                  options={ROSTER_CONFIG.heroOptions.map((hero) => ({ value: hero, label: hero }))}
+                  options={allHeroOptions().map((hero) => ({ value: hero, label: hero }))}
                   onChange={(event) => setHeroFilter(event.target.value || "all")}
                 />
               </Field>
@@ -760,10 +769,10 @@ function ParticipationList({
                   <Info label="Infantry" value={troopSummary(entry.infantryFcLevel, entry.infantryHelios)} />
                   <Info label="Lancer" value={troopSummary(entry.lancerFcLevel, entry.lancerHelios)} />
                   <Info label="Marksmen" value={troopSummary(entry.marksmenFcLevel, entry.marksmenHelios)} />
-                  <Info label="Heroes" value={entry.heroes.join(", ")} />
+                  <Info label="Rally Heroes" value={heroSummary(entry.rallyJoinHeroes)} />
+                  <Info label="Defense Heroes" value={heroSummary(entry.defenseJoinHeroes)} />
                   <Info label="Submitted" value={formatTimestamp(entry.submittedAt)} />
                 </div>
-                {entry.notes && <p className="hint">Notes: {entry.notes}</p>}
                 {entry.sheetError && <p className="hint">Sheets: {entry.sheetError}</p>}
                 <div className="assign-actions">
                   <Button size="small" variant="secondary" onClick={() => onStartEdit(entry)} disabled={loading}>
@@ -801,8 +810,12 @@ function EditParticipationForm({
   onSave: () => void;
   onCancel: () => void;
 }) {
-  function toggleHero(hero: HeroOption) {
-    update("heroes", toggleHeroSelection(form.heroes, hero));
+  function toggleRallyHero(hero: RallyJoinHeroOption) {
+    update("rallyJoinHeroes", toggleHeroSelection(form.rallyJoinHeroes, hero));
+  }
+
+  function toggleDefenseHero(hero: DefenseJoinHeroOption) {
+    update("defenseJoinHeroes", toggleHeroSelection(form.defenseJoinHeroes, hero));
   }
 
   return (
@@ -863,21 +876,31 @@ function EditParticipationForm({
       </div>
 
       <div className="field-block">
-        <span className="field-label">Available 4★ Heroes</span>
+        <span className="field-label">Rally Join Heroes</span>
+        <p className="hint">Select all heroes at 4★ with Level 5 Expedition Skill.</p>
         <div className="choice-grid compact-choice-grid">
-          {ROSTER_CONFIG.heroOptions.map((hero) => (
-            <ChoiceToggle key={hero} selected={form.heroes.includes(hero)} onClick={() => toggleHero(hero)}>
+          {ROSTER_CONFIG.rallyJoinHeroOptions.map((hero) => (
+            <ChoiceToggle key={hero} selected={form.rallyJoinHeroes.includes(hero)} onClick={() => toggleRallyHero(hero)}>
               {hero}
             </ChoiceToggle>
           ))}
         </div>
-        {form.heroes.includes(NONE_HERO_OPTION) && <p className="hint">Selecting None clears all other hero choices.</p>}
-        {errors.heroes && <small className="field-error">{errors.heroes}</small>}
+        {errors.rallyJoinHeroes && <small className="field-error">{errors.rallyJoinHeroes}</small>}
       </div>
 
-      <Field label="Notes" hint="Optional">
-        <textarea value={form.notes} onChange={(event) => update("notes", event.target.value)} rows={4} />
-      </Field>
+      <div className="field-block">
+        <span className="field-label">Defense Join Heroes</span>
+        <p className="hint">Select all heroes at 4★ with Level 5 Expedition Skill.</p>
+        <div className="choice-grid compact-choice-grid">
+          {ROSTER_CONFIG.defenseJoinHeroOptions.map((hero) => (
+            <ChoiceToggle key={hero} selected={form.defenseJoinHeroes.includes(hero)} onClick={() => toggleDefenseHero(hero)}>
+              {hero}
+            </ChoiceToggle>
+          ))}
+        </div>
+        {errors.defenseJoinHeroes && <small className="field-error">{errors.defenseJoinHeroes}</small>}
+      </div>
+
 
       <div className="assign-actions">
         <Button size="small" variant="primary" onClick={onSave} disabled={loading}>
@@ -995,13 +1018,17 @@ function formFromEntry(entry: ParticipationEntry): ParticipationForm {
     lancerHelios: entry.lancerHelios,
     marksmenFcLevel: entry.marksmenFcLevel,
     marksmenHelios: entry.marksmenHelios,
-    heroes: entry.heroes,
-    notes: entry.notes
+    rallyJoinHeroes: entry.rallyJoinHeroes,
+    defenseJoinHeroes: entry.defenseJoinHeroes
   };
 }
 
 function troopSummary(fcLevel: string, helios: boolean) {
   return `${fcLevel} / Helios: ${helios ? "Yes" : "No"}`;
+}
+
+function heroSummary(heroes: readonly string[]) {
+  return heroes.length > 0 ? heroes.join(", ") : "None";
 }
 
 function compareEntries(a: ParticipationEntry, b: ParticipationEntry, key: AdminSortKey, direction: SortDirection) {

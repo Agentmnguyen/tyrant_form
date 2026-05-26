@@ -1,4 +1,12 @@
-import type { Alliance, Availability, EventStatus, EventType, FcLevel, HeroOption } from "@/lib/rosterConfig";
+import type {
+  Alliance,
+  Availability,
+  DefenseJoinHeroOption,
+  EventStatus,
+  EventType,
+  FcLevel,
+  RallyJoinHeroOption
+} from "@/lib/rosterConfig";
 
 export type SheetSyncStatus = "pending" | "synced" | "sheet_sync_failed";
 
@@ -37,8 +45,8 @@ export type ParticipationEntry = {
   lancerHelios: boolean;
   marksmenFcLevel: FcLevel;
   marksmenHelios: boolean;
-  heroes: HeroOption[];
-  notes: string;
+  rallyJoinHeroes: RallyJoinHeroOption[];
+  defenseJoinHeroes: DefenseJoinHeroOption[];
   submittedAt: string;
   editedAt: string;
   sheetSyncStatus: SheetSyncStatus;
@@ -60,8 +68,8 @@ export type ParticipationForm = {
   lancerHelios: boolean;
   marksmenFcLevel: "" | FcLevel;
   marksmenHelios: boolean;
-  heroes: HeroOption[];
-  notes: string;
+  rallyJoinHeroes: RallyJoinHeroOption[];
+  defenseJoinHeroes: DefenseJoinHeroOption[];
 };
 
 export type ParticipationPayload = {
@@ -76,8 +84,8 @@ export type ParticipationPayload = {
   lancerHelios: boolean;
   marksmenFcLevel: FcLevel;
   marksmenHelios: boolean;
-  heroes: HeroOption[];
-  notes: string;
+  rallyJoinHeroes: RallyJoinHeroOption[];
+  defenseJoinHeroes: DefenseJoinHeroOption[];
 };
 
 export type AdminSortKey =
@@ -117,6 +125,6 @@ export const initialParticipationForm: ParticipationForm = {
   lancerHelios: false,
   marksmenFcLevel: "",
   marksmenHelios: false,
-  heroes: [],
-  notes: ""
+  rallyJoinHeroes: [],
+  defenseJoinHeroes: []
 };

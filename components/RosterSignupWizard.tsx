@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, Lock, Send } from "lucide-react";
 import { ChoiceToggle, Field, SelectField, TextInput } from "@/components/FormControls";
 import { Button, Hero, cx } from "@/components/ui";
-import { NONE_HERO_OPTION, ROSTER_CONFIG, type HeroOption } from "@/lib/rosterConfig";
+import { ROSTER_CONFIG, type DefenseJoinHeroOption, type RallyJoinHeroOption } from "@/lib/rosterConfig";
 import {
   initialParticipationForm,
   type ParticipationEntry,
@@ -18,7 +18,7 @@ type Message = {
   text: string;
 } | null;
 
-const stepNames = ["Select Event", "Player Info", "Availability", "Troops", "Heroes & Notes", "Review"];
+const stepNames = ["Player Info", "Availability", "Troops", "Heroes", "Review"];
 
 export function RosterSignupWizard() {
   const [step, setStep] = useState(0);
@@ -28,9 +28,9 @@ export function RosterSignupWizard() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState<ParticipationEntry | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
-  const [openEvents, setOpenEvents] = useState<RosterEvent[]>([]);
+  const [openEvent, setOpenEvent] = useState<RosterEvent | null>(null);
 
-  const selectedEvent = openEvents.find((event) => event.id === form.eventId) || null;
+  const selectedEvent = openEvent;
   const progress = useMemo(() => `${((Math.min(step + 1, stepNames.length) / stepNames.length) * 100).toFixed(0)}%`, [step]);
   const validation = validateForm(form);
   const fieldErrors = !validation.ok && errorStep === step ? validation.fieldErrors : {};
@@ -46,14 +46,16 @@ export function RosterSignupWizard() {
         if (!active) return;
 
         if (!response.ok || !body.ok) {
-          setMessage({ type: "error", text: body.message || "Unable to load open events." });
+          setMessage({ type: "error", text: body.message || "Unable to load the open event." });
           return;
         }
 
-        setOpenEvents(body.data.openEvents || []);
+        const currentEvent = body.data.openEvent || null;
+        setOpenEvent(currentEvent);
+        setForm((current) => ({ ...current, eventId: currentEvent?.id || "" }));
       } catch (error) {
         if (active) {
-          setMessage({ type: "error", text: error instanceof Error ? error.message : "Unable to load open events." });
+          setMessage({ type: "error", text: error instanceof Error ? error.message : "Unable to load the open event." });
         }
       } finally {
         if (active) {
@@ -128,7 +130,7 @@ export function RosterSignupWizard() {
   }
 
   function reset() {
-    setForm(initialParticipationForm);
+    setForm({ ...initialParticipationForm, eventId: openEvent?.id || "" });
     setStep(0);
     setSubmitted(null);
     setErrorStep(null);
@@ -140,7 +142,7 @@ export function RosterSignupWizard() {
       <main className="app-shell narrow">
         <Hero
           title="Participation saved"
-          subtitle="Your availability, troop readiness, hero readiness, and notes were saved."
+          subtitle="Your availability, troop readiness, and hero readiness were saved."
           pill={submitted.event.name}
         />
         <section className="panel confirmation-panel">
@@ -159,7 +161,7 @@ export function RosterSignupWizard() {
     <main className="app-shell narrow">
       <Hero
         title={ROSTER_CONFIG.appName}
-        subtitle="Track player availability, troop readiness, hero readiness, and participation across 1474 events."
+        subtitle="Submit your participation for the current state event."
         pill={selectedEvent ? selectedEvent.name : "Event participation"}
       />
 
@@ -167,11 +169,11 @@ export function RosterSignupWizard() {
         <section className="panel state-panel">
           <div className="loading-dot" />
           <h2>Checking active events</h2>
-          <p>Loading open events before showing the participation form.</p>
+          <p>Loading the open event before showing the participation form.</p>
         </section>
       )}
 
-      {!statusLoading && openEvents.length === 0 && (
+      {!statusLoading && !openEvent && (
         <section className="panel state-panel closed">
           <Lock aria-hidden="true" />
           <h2>No events are open</h2>
@@ -180,7 +182,7 @@ export function RosterSignupWizard() {
         </section>
       )}
 
-      {!statusLoading && openEvents.length > 0 && (
+      {!statusLoading && openEvent && (
         <>
           <div className="progress-card">
             <div className="progress-label">
@@ -194,12 +196,11 @@ export function RosterSignupWizard() {
 
           <section className="panel form-panel">
             <div className="step-transition" key={step}>
-              {step === 0 && <EventStep errors={fieldErrors} events={openEvents} selectedEventId={form.eventId} update={update} />}
-              {step === 1 && <PlayerInfoStep errors={fieldErrors} form={form} update={update} />}
-              {step === 2 && <AvailabilityStep errors={fieldErrors} form={form} update={update} />}
-              {step === 3 && <TroopsStep errors={fieldErrors} form={form} update={update} />}
-              {step === 4 && <HeroesStep errors={fieldErrors} form={form} update={update} />}
-              {step === 5 && <ReviewStep event={selectedEvent} form={form} onEdit={setStep} />}
+              {step === 0 && <PlayerInfoStep errors={fieldErrors} form={form} update={update} />}
+              {step === 1 && <AvailabilityStep errors={fieldErrors} form={form} update={update} />}
+              {step === 2 && <TroopsStep errors={fieldErrors} form={form} update={update} />}
+              {step === 3 && <HeroesStep errors={fieldErrors} form={form} update={update} />}
+              {step === 4 && <ReviewStep event={selectedEvent} form={form} onEdit={setStep} />}
             </div>
 
             {message && <div className={`message ${message.type}`}>{message.text}</div>}
@@ -229,35 +230,6 @@ export function RosterSignupWizard() {
         </>
       )}
     </main>
-  );
-}
-
-function EventStep({
-  events,
-  selectedEventId,
-  errors,
-  update
-}: {
-  events: RosterEvent[];
-  selectedEventId: string;
-  errors: Record<string, string>;
-  update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
-}) {
-  return (
-    <div className="step-stack">
-      <StepTitle title="Select Event" note="Choose the open event you are submitting participation for." />
-      <div className="choice-grid">
-        {events.map((event) => (
-          <ChoiceToggle key={event.id} selected={selectedEventId === event.id} onClick={() => update("eventId", event.id)}>
-            <span>
-              <strong>{event.name}</strong>
-              <small>{event.eventType}</small>
-            </span>
-          </ChoiceToggle>
-        ))}
-      </div>
-      {errors.eventId && <small className="field-error">{errors.eventId}</small>}
-    </div>
   );
 }
 
@@ -412,25 +384,32 @@ function HeroesStep({
   errors: Record<string, string>;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
-  function toggle(hero: HeroOption) {
-    update("heroes", toggleHeroSelection(form.heroes, hero));
+  function toggleRallyHero(hero: RallyJoinHeroOption) {
+    update("rallyJoinHeroes", toggleHeroSelection(form.rallyJoinHeroes, hero));
+  }
+
+  function toggleDefenseHero(hero: DefenseJoinHeroOption) {
+    update("defenseJoinHeroes", toggleHeroSelection(form.defenseJoinHeroes, hero));
   }
 
   return (
     <div className="step-stack">
-      <StepTitle title="Available 4★ Heroes" note="Select every listed hero you have at 4 star." />
-      <div className="choice-grid">
-        {ROSTER_CONFIG.heroOptions.map((hero) => (
-          <ChoiceToggle key={hero} selected={form.heroes.includes(hero)} onClick={() => toggle(hero)}>
-            {hero}
-          </ChoiceToggle>
-        ))}
-      </div>
-      {form.heroes.includes(NONE_HERO_OPTION) && <p className="hint">Selecting None clears all other hero choices.</p>}
-      {errors.heroes && <small className="field-error">{errors.heroes}</small>}
-      <Field label="Notes" hint="Optional">
-        <textarea value={form.notes} onChange={(event) => update("notes", event.target.value)} rows={4} />
-      </Field>
+      <HeroChoiceSection
+        title="Rally Join Heroes"
+        subtitle="Select all heroes at 4★ with Level 5 Expedition Skill."
+        options={ROSTER_CONFIG.rallyJoinHeroOptions}
+        selected={form.rallyJoinHeroes}
+        onToggle={toggleRallyHero}
+      />
+      {errors.rallyJoinHeroes && <small className="field-error">{errors.rallyJoinHeroes}</small>}
+      <HeroChoiceSection
+        title="Defense Join Heroes"
+        subtitle="Select all heroes at 4★ with Level 5 Expedition Skill."
+        options={ROSTER_CONFIG.defenseJoinHeroOptions}
+        selected={form.defenseJoinHeroes}
+        onToggle={toggleDefenseHero}
+      />
+      {errors.defenseJoinHeroes && <small className="field-error">{errors.defenseJoinHeroes}</small>}
     </div>
   );
 }
@@ -438,15 +417,15 @@ function HeroesStep({
 function ReviewStep({ form, event, onEdit }: { form: ParticipationForm; event: RosterEvent | null; onEdit: (step: number) => void }) {
   const rows = [
     ["Event", event?.name || "Not selected", 0],
-    ["Player Name", form.playerName, 1],
-    ["Player ID", form.playerGameId, 1],
-    ["Alliance", form.alliance, 1],
-    ["Availability", form.availability, 2],
-    ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios), 3],
-    ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios), 3],
-    ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios), 3],
-    ["Available 4★ Heroes", form.heroes.join(", "), 4],
-    ["Notes", form.notes || "None", 4]
+    ["Player Name", form.playerName, 0],
+    ["Player ID", form.playerGameId, 0],
+    ["Alliance", form.alliance, 0],
+    ["Availability", form.availability, 1],
+    ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios), 2],
+    ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios), 2],
+    ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios), 2],
+    ["Rally Join Heroes", heroReview(form.rallyJoinHeroes), 3],
+    ["Defense Join Heroes", heroReview(form.defenseJoinHeroes), 3]
   ] as const;
 
   return (
@@ -467,8 +446,39 @@ function ReviewStep({ form, event, onEdit }: { form: ParticipationForm; event: R
   );
 }
 
+function HeroChoiceSection<T extends string>({
+  title,
+  subtitle,
+  options,
+  selected,
+  onToggle
+}: {
+  title: string;
+  subtitle: string;
+  options: readonly T[];
+  selected: readonly T[];
+  onToggle: (hero: T) => void;
+}) {
+  return (
+    <section className="hero-choice-section">
+      <StepTitle title={title} note={subtitle} />
+      <div className="choice-grid">
+        {options.map((hero) => (
+          <ChoiceToggle key={hero} selected={selected.includes(hero)} onClick={() => onToggle(hero)}>
+            {hero}
+          </ChoiceToggle>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function troopReview(fcLevel: string, helios: boolean) {
   return `${fcLevel || "Not selected"} / Helios: ${helios ? "Yes" : "No"}`;
+}
+
+function heroReview(heroes: readonly string[]) {
+  return heroes.length > 0 ? heroes.join(", ") : "None selected";
 }
 
 function StepTitle({ title, note }: { title: string; note?: string }) {

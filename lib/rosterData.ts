@@ -46,8 +46,8 @@ type ParticipationEntryRow = {
   lancer_helios: boolean;
   marksmen_fc_level: ParticipationPayload["marksmenFcLevel"];
   marksmen_helios: boolean;
-  heroes: ParticipationPayload["heroes"];
-  notes: string | null;
+  rally_join_heroes: ParticipationPayload["rallyJoinHeroes"];
+  defense_join_heroes: ParticipationPayload["defenseJoinHeroes"];
   submitted_at: string;
   edited_at: string;
   sheet_sync_status: SheetSyncStatus;
@@ -68,9 +68,11 @@ export type EventOpenConflict = {
   targetEvent: RosterEvent;
 };
 
-export async function getPublicOpenEventsState() {
+export async function getPublicOpenEventState() {
+  const openEvents = await listOpenEvents();
+
   return {
-    openEvents: await listOpenEvents()
+    openEvent: openEvents[0] || null
   };
 }
 
@@ -113,7 +115,6 @@ export async function listOpenEvents() {
     .from("events")
     .select("*")
     .eq("status", "open")
-    .order("event_type", { ascending: true })
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -235,12 +236,10 @@ export async function openEvent(eventId: string, lockExisting = false) {
     throw new Error("Restore this event before opening it.");
   }
 
-  const openConflict = (await listEvents()).find(
-    (event) => event.eventType === targetEvent.eventType && event.status === "open" && event.id !== targetEvent.id
-  );
+  const openConflict = (await listEvents()).find((event) => event.status === "open" && event.id !== targetEvent.id);
 
   if (openConflict && !lockExisting) {
-    const conflict = new Error("Another event of this type is already open.");
+    const conflict = new Error("Another event is already open.");
     conflict.name = "OpenEventConflictError";
     (conflict as Error & { conflict?: EventOpenConflict }).conflict = {
       openEvent: openConflict,
@@ -257,7 +256,8 @@ export async function openEvent(eventId: string, lockExisting = false) {
         closed_at: new Date().toISOString(),
         locked_at: new Date().toISOString()
       })
-      .eq("id", openConflict.id);
+      .eq("status", "open")
+      .neq("id", targetEvent.id);
 
     if (lockError) {
       throw new Error(lockError.message);
@@ -421,8 +421,8 @@ async function upsertParticipationEntry(playerId: string, eventId: string, paylo
         lancer_helios: payload.lancerHelios,
         marksmen_fc_level: payload.marksmenFcLevel,
         marksmen_helios: payload.marksmenHelios,
-        heroes: payload.heroes,
-        notes: payload.notes,
+        rally_join_heroes: payload.rallyJoinHeroes,
+        defense_join_heroes: payload.defenseJoinHeroes,
         edited_at: now,
         sheet_sync_status: "pending",
         sheet_error: null
@@ -504,8 +504,8 @@ export function mapParticipationEntry(row: ParticipationEntryRow): Participation
     lancerHelios: row.lancer_helios,
     marksmenFcLevel: row.marksmen_fc_level,
     marksmenHelios: row.marksmen_helios,
-    heroes: row.heroes,
-    notes: row.notes || "",
+    rallyJoinHeroes: row.rally_join_heroes || [],
+    defenseJoinHeroes: row.defense_join_heroes || [],
     submittedAt: row.submitted_at,
     editedAt: row.edited_at,
     sheetSyncStatus: row.sheet_sync_status,

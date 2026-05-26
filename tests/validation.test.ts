@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { generateEventNames } from "@/lib/eventNaming";
-import { NONE_HERO_OPTION } from "@/lib/rosterConfig";
 import type { ParticipationForm } from "@/lib/rosterTypes";
 import { toggleHeroSelection, validateForm } from "@/lib/rosterValidation";
 
@@ -17,8 +16,8 @@ const validForm: ParticipationForm = {
   lancerHelios: false,
   marksmenFcLevel: "FC10",
   marksmenHelios: true,
-  heroes: ["Ahmose", "Renee"],
-  notes: "Can flex timing."
+  rallyJoinHeroes: ["Norah", "Renee"],
+  defenseJoinHeroes: ["Ahmose", "Renee"]
 };
 
 test("valid participation form normalizes into a payload", () => {
@@ -29,31 +28,36 @@ test("valid participation form normalizes into a payload", () => {
     assert.equal(result.data.eventId, "event-1");
     assert.equal(result.data.playerGameId, "12345");
     assert.equal(result.data.availability, "Full Event");
-    assert.deepEqual(result.data.heroes, ["Ahmose", "Renee"]);
-    assert.equal(result.data.notes, "Can flex timing.");
+    assert.deepEqual(result.data.rallyJoinHeroes, ["Norah", "Renee"]);
+    assert.deepEqual(result.data.defenseJoinHeroes, ["Ahmose", "Renee"]);
   }
 });
 
-test("None of the above clears selected heroes", () => {
-  const result = toggleHeroSelection(["Ahmose", "Gatot"], NONE_HERO_OPTION);
-  assert.deepEqual(result, [NONE_HERO_OPTION]);
-});
-
-test("selecting a hero clears None of the above", () => {
-  const result = toggleHeroSelection([NONE_HERO_OPTION], "Wu Ming");
-  assert.deepEqual(result, ["Wu Ming"]);
-});
-
-test("None of the above cannot be combined with other heroes", () => {
+test("empty hero selections are valid", () => {
   const result = validateForm({
     ...validForm,
-    heroes: ["Ahmose", NONE_HERO_OPTION]
+    rallyJoinHeroes: [],
+    defenseJoinHeroes: []
+  });
+
+  assert.equal(result.ok, true);
+});
+
+test("hero toggle adds and removes choices", () => {
+  assert.deepEqual(toggleHeroSelection(["Norah"], "Renee"), ["Norah", "Renee"]);
+  assert.deepEqual(toggleHeroSelection(["Norah", "Renee"], "Norah"), ["Renee"]);
+});
+
+test("invalid hero choices are rejected by section", () => {
+  const result = validateForm({
+    ...validForm,
+    rallyJoinHeroes: ["Ahmose" as never]
   });
 
   assert.equal(result.ok, false);
 
   if (!result.ok) {
-    assert.equal(result.fieldErrors.heroes, `"${NONE_HERO_OPTION}" cannot be combined with other heroes.`);
+    assert.equal(result.fieldErrors.rallyJoinHeroes, "Choose valid rally join heroes.");
   }
 });
 

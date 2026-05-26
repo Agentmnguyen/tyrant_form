@@ -19,8 +19,8 @@ const PARTICIPATION_HEADERS = [
   "lancer_helios",
   "marksmen_fc_level",
   "marksmen_helios",
-  "heroes",
-  "notes",
+  "rally_join_heroes",
+  "defense_join_heroes",
   "submitted_at",
   "edited_at",
   "google_sheets_sync_status"
@@ -57,8 +57,8 @@ export function buildParticipationCsv(entries: ParticipationEntry[]) {
     String(entry.lancerHelios),
     entry.marksmenFcLevel,
     String(entry.marksmenHelios),
-    entry.heroes.join("; "),
-    entry.notes,
+    entry.rallyJoinHeroes.join("; "),
+    entry.defenseJoinHeroes.join("; "),
     entry.submittedAt,
     entry.editedAt,
     entry.sheetSyncStatus

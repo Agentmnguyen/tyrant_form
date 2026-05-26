@@ -51,8 +51,10 @@ create table if not exists public.events (
 create unique index if not exists events_google_sheet_tab_name_unique_idx
   on public.events (lower(google_sheet_tab_name));
 
-create unique index if not exists events_one_open_per_type_idx
-  on public.events (event_type)
+drop index if exists public.events_one_open_per_type_idx;
+
+create unique index if not exists events_one_open_global_idx
+  on public.events ((status))
   where status = 'open';
 
 create index if not exists events_event_type_idx on public.events (event_type);
@@ -72,8 +74,8 @@ create table if not exists public.participation_entries (
   marksmen_fc_level text not null,
   marksmen_helios boolean not null default false,
 
-  heroes text[] not null,
-  notes text not null default '',
+  rally_join_heroes text[] not null default '{}'::text[],
+  defense_join_heroes text[] not null default '{}'::text[],
 
   submitted_at timestamptz not null default now(),
   edited_at timestamptz not null default now(),
@@ -88,16 +90,81 @@ create table if not exists public.participation_entries (
   constraint participation_entries_infantry_fc_level_check check (infantry_fc_level in ('FC5', 'FC6', 'FC7', 'FC8', 'FC9', 'FC10')),
   constraint participation_entries_lancer_fc_level_check check (lancer_fc_level in ('FC5', 'FC6', 'FC7', 'FC8', 'FC9', 'FC10')),
   constraint participation_entries_marksmen_fc_level_check check (marksmen_fc_level in ('FC5', 'FC6', 'FC7', 'FC8', 'FC9', 'FC10')),
-  constraint participation_entries_heroes_check check (
-    cardinality(heroes) > 0
-    and heroes <@ array['Ahmose', 'Gatot', 'Gordan', 'Renee', 'Wu Ming', 'None of the above']::text[]
-    and (
-      heroes = array['None of the above']::text[]
-      or not ('None of the above' = any(heroes))
-    )
+  constraint participation_entries_rally_join_heroes_check check (
+    rally_join_heroes <@ array['Norah', 'Renee', 'Mia', 'Hendrik', 'Gwen']::text[]
+  ),
+  constraint participation_entries_defense_join_heroes_check check (
+    defense_join_heroes <@ array['Renee', 'Wu Ming', 'Gordan', 'Ahmose', 'Gatot']::text[]
   ),
   constraint participation_entries_sheet_sync_status_check check (sheet_sync_status in ('pending', 'synced', 'sheet_sync_failed'))
 );
+
+alter table public.participation_entries
+  add column if not exists rally_join_heroes text[] not null default '{}'::text[];
+
+alter table public.participation_entries
+  add column if not exists defense_join_heroes text[] not null default '{}'::text[];
+
+alter table public.participation_entries
+  drop constraint if exists participation_entries_heroes_check;
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'participation_entries'
+      and column_name = 'heroes'
+  ) then
+    execute 'alter table public.participation_entries alter column heroes drop not null';
+    execute 'alter table public.participation_entries alter column heroes set default ''{}''::text[]';
+  end if;
+end;
+$$;
+
+alter table public.participation_entries
+  drop constraint if exists participation_entries_rally_join_heroes_check;
+
+alter table public.participation_entries
+  add constraint participation_entries_rally_join_heroes_check check (
+    rally_join_heroes <@ array['Norah', 'Renee', 'Mia', 'Hendrik', 'Gwen']::text[]
+  );
+
+alter table public.participation_entries
+  drop constraint if exists participation_entries_defense_join_heroes_check;
+
+alter table public.participation_entries
+  add constraint participation_entries_defense_join_heroes_check check (
+    defense_join_heroes <@ array['Renee', 'Wu Ming', 'Gordan', 'Ahmose', 'Gatot']::text[]
+  );
+
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'participation_entries'
+      and column_name = 'heroes'
+  ) then
+    update public.participation_entries
+    set
+      rally_join_heroes = (
+        select coalesce(array_agg(distinct hero), '{}'::text[])
+        from unnest(heroes) as hero
+        where hero in ('Norah', 'Renee', 'Mia', 'Hendrik', 'Gwen')
+      ),
+      defense_join_heroes = (
+        select coalesce(array_agg(distinct hero), '{}'::text[])
+        from unnest(heroes) as hero
+        where hero in ('Renee', 'Wu Ming', 'Gordan', 'Ahmose', 'Gatot')
+      )
+    where cardinality(rally_join_heroes) = 0
+      and cardinality(defense_join_heroes) = 0;
+  end if;
+end;
+$$;
 
 create unique index if not exists participation_entries_player_event_unique_idx
   on public.participation_entries (event_id, player_id);
@@ -106,7 +173,9 @@ create index if not exists participation_entries_player_id_idx on public.partici
 create index if not exists participation_entries_event_id_idx on public.participation_entries (event_id);
 create index if not exists participation_entries_submitted_at_idx on public.participation_entries (submitted_at desc);
 create index if not exists participation_entries_availability_idx on public.participation_entries (availability);
-create index if not exists participation_entries_heroes_idx on public.participation_entries using gin (heroes);
+drop index if exists public.participation_entries_heroes_idx;
+create index if not exists participation_entries_rally_join_heroes_idx on public.participation_entries using gin (rally_join_heroes);
+create index if not exists participation_entries_defense_join_heroes_idx on public.participation_entries using gin (defense_join_heroes);
 create index if not exists participation_entries_sheet_sync_status_idx on public.participation_entries (sheet_sync_status);
 
 create or replace function public.touch_updated_at()
@@ -224,8 +293,8 @@ begin
         lancer_helios,
         marksmen_fc_level,
         marksmen_helios,
-        heroes,
-        notes,
+        rally_join_heroes,
+        defense_join_heroes,
         submitted_at,
         edited_at,
         sheet_sync_status,
@@ -246,8 +315,16 @@ begin
         s.lancer_helios,
         s.marksmen_fc_level,
         s.marksmen_helios,
-        s.heroes,
-        '',
+        (
+          select coalesce(array_agg(distinct hero), '{}'::text[])
+          from unnest(s.heroes) as hero
+          where hero in ('Norah', 'Renee', 'Mia', 'Hendrik', 'Gwen')
+        ),
+        (
+          select coalesce(array_agg(distinct hero), '{}'::text[])
+          from unnest(s.heroes) as hero
+          where hero in ('Renee', 'Wu Ming', 'Gordan', 'Ahmose', 'Gatot')
+        ),
         s.created_at,
         s.updated_at,
         s.sheet_sync_status,

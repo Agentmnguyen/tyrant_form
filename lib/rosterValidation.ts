@@ -1,11 +1,11 @@
 import {
-  NONE_HERO_OPTION,
   isAlliance,
   isAvailability,
+  isDefenseJoinHeroOption,
   isFcLevel,
-  isHeroOption
+  isRallyJoinHeroOption
 } from "@/lib/rosterConfig";
-import type { HeroOption } from "@/lib/rosterConfig";
+import type { DefenseJoinHeroOption, RallyJoinHeroOption } from "@/lib/rosterConfig";
 import type { ParticipationForm, ParticipationPayload } from "@/lib/rosterTypes";
 
 export function validateStep(step: number, form: ParticipationForm): string {
@@ -13,23 +13,19 @@ export function validateStep(step: number, form: ParticipationForm): string {
   const fieldErrors = result.ok ? {} : result.fieldErrors;
 
   if (step === 0) {
-    return firstError(fieldErrors, ["eventId"]);
-  }
-
-  if (step === 1) {
     return firstError(fieldErrors, ["playerName", "playerGameId", "alliance"]);
   }
 
-  if (step === 2) {
+  if (step === 1) {
     return firstError(fieldErrors, ["availability"]);
   }
 
-  if (step === 3) {
+  if (step === 2) {
     return firstError(fieldErrors, ["infantryFcLevel", "lancerFcLevel", "marksmenFcLevel"]);
   }
 
-  if (step === 4) {
-    return firstError(fieldErrors, ["heroes"]);
+  if (step === 3) {
+    return firstError(fieldErrors, ["rallyJoinHeroes", "defenseJoinHeroes"]);
   }
 
   return result.ok ? "" : Object.values(fieldErrors)[0] || "Review your participation details.";
@@ -40,11 +36,12 @@ export function validateForm(form: ParticipationForm): { ok: true; data: Partici
   const eventId = form.eventId.trim();
   const playerName = form.playerName.trim();
   const playerGameId = form.playerGameId.trim();
-  const notes = form.notes.trim();
-  const hasInvalidHero = form.heroes.some((hero) => !isHeroOption(hero));
-  const heroes = normalizeHeroes(form.heroes);
+  const rallyJoinHeroes = normalizeRallyJoinHeroes(form.rallyJoinHeroes);
+  const defenseJoinHeroes = normalizeDefenseJoinHeroes(form.defenseJoinHeroes);
+  const hasInvalidRallyHero = form.rallyJoinHeroes.some((hero) => !isRallyJoinHeroOption(hero));
+  const hasInvalidDefenseHero = form.defenseJoinHeroes.some((hero) => !isDefenseJoinHeroOption(hero));
 
-  if (!eventId) fieldErrors.eventId = "Choose an open event.";
+  if (!eventId) fieldErrors.eventId = "No event is open for participation.";
   if (!playerName) fieldErrors.playerName = "Player name is required.";
   if (!playerGameId) fieldErrors.playerGameId = "Player ID is required.";
   if (!form.alliance || !isAlliance(form.alliance)) fieldErrors.alliance = "Choose the player's alliance.";
@@ -52,11 +49,8 @@ export function validateForm(form: ParticipationForm): { ok: true; data: Partici
   if (!form.infantryFcLevel || !isFcLevel(form.infantryFcLevel)) fieldErrors.infantryFcLevel = "Choose Infantry FC level.";
   if (!form.lancerFcLevel || !isFcLevel(form.lancerFcLevel)) fieldErrors.lancerFcLevel = "Choose Lancer FC level.";
   if (!form.marksmenFcLevel || !isFcLevel(form.marksmenFcLevel)) fieldErrors.marksmenFcLevel = "Choose Marksmen FC level.";
-  if (heroes.length === 0) fieldErrors.heroes = "Choose at least one hero option.";
-  if (hasInvalidHero) fieldErrors.heroes = "Choose valid hero options.";
-  if (heroes.length > 1 && heroes.includes(NONE_HERO_OPTION)) {
-    fieldErrors.heroes = `"${NONE_HERO_OPTION}" cannot be combined with other heroes.`;
-  }
+  if (hasInvalidRallyHero) fieldErrors.rallyJoinHeroes = "Choose valid rally join heroes.";
+  if (hasInvalidDefenseHero) fieldErrors.defenseJoinHeroes = "Choose valid defense join heroes.";
 
   if (Object.keys(fieldErrors).length > 0) {
     return { ok: false, fieldErrors };
@@ -76,8 +70,8 @@ export function validateForm(form: ParticipationForm): { ok: true; data: Partici
       lancerHelios: form.lancerHelios,
       marksmenFcLevel: form.marksmenFcLevel as ParticipationPayload["marksmenFcLevel"],
       marksmenHelios: form.marksmenHelios,
-      heroes,
-      notes
+      rallyJoinHeroes,
+      defenseJoinHeroes
     }
   };
 }
@@ -103,28 +97,21 @@ export function validatePayload(value: unknown): { ok: true; data: Participation
     lancerHelios: Boolean(payload.lancerHelios),
     marksmenFcLevel: (payload.marksmenFcLevel || "") as ParticipationForm["marksmenFcLevel"],
     marksmenHelios: Boolean(payload.marksmenHelios),
-    heroes: Array.isArray(payload.heroes) ? (payload.heroes as HeroOption[]) : [],
-    notes: String(payload.notes || "")
+    rallyJoinHeroes: Array.isArray(payload.rallyJoinHeroes) ? (payload.rallyJoinHeroes as RallyJoinHeroOption[]) : [],
+    defenseJoinHeroes: Array.isArray(payload.defenseJoinHeroes) ? (payload.defenseJoinHeroes as DefenseJoinHeroOption[]) : []
   });
 }
 
-export function normalizeHeroes(heroes: readonly HeroOption[]) {
-  const unique = Array.from(new Set(heroes.filter(isHeroOption)));
-
-  if (unique.includes(NONE_HERO_OPTION)) {
-    return unique.length === 1 ? [NONE_HERO_OPTION] : unique;
-  }
-
-  return unique;
+export function normalizeRallyJoinHeroes(heroes: readonly RallyJoinHeroOption[]) {
+  return Array.from(new Set(heroes.filter(isRallyJoinHeroOption)));
 }
 
-export function toggleHeroSelection(current: readonly HeroOption[], hero: HeroOption) {
-  if (hero === NONE_HERO_OPTION) {
-    return current.includes(NONE_HERO_OPTION) ? [] : [NONE_HERO_OPTION];
-  }
+export function normalizeDefenseJoinHeroes(heroes: readonly DefenseJoinHeroOption[]) {
+  return Array.from(new Set(heroes.filter(isDefenseJoinHeroOption)));
+}
 
-  const withoutNone = current.filter((selected) => selected !== NONE_HERO_OPTION);
-  return withoutNone.includes(hero) ? withoutNone.filter((selected) => selected !== hero) : [...withoutNone, hero];
+export function toggleHeroSelection<T extends string>(current: readonly T[], hero: T) {
+  return current.includes(hero) ? current.filter((selected) => selected !== hero) : [...current, hero];
 }
 
 export function normalizePlayerGameId(playerGameId: string) {
