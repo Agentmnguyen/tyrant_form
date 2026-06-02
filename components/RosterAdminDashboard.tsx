@@ -760,12 +760,12 @@ function ParticipationList({
   updateEdit: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
   return (
-    <div className="submission-list">
+    <div className="submission-list participation-list">
       {entries.length === 0 ? (
         <div className="empty">No participation entries match these filters.</div>
       ) : (
         entries.map((entry) => (
-          <article className="submission-card" key={entry.id}>
+          <article className="submission-card participation-card" key={entry.id}>
             <div className="submission-main">
               <div>
                 <span className="event-mini">{entry.event.name}</span>{" "}
@@ -792,33 +792,34 @@ function ParticipationList({
               />
             ) : (
               <>
-                <div className="submission-grid">
-                  <Info label="Event Type" value={entry.event.eventType} />
+                <div className="participation-entry-row">
+                  <Info className="participation-kv-event-type" label="Event Type" value={entry.event.eventType} />
                   <Info label="Availability" value={entry.availability} />
                   <Info label="Infantry" value={troopSummary(entry.infantryFcLevel, entry.infantryHelios)} />
                   <Info label="Lancer" value={troopSummary(entry.lancerFcLevel, entry.lancerHelios)} />
                   <Info label="Marksmen" value={troopSummary(entry.marksmenFcLevel, entry.marksmenHelios)} />
-                  <Info label="Rally Heroes" value={heroSummary(entry.rallyJoinHeroes)} />
-                  <Info label="Defense Heroes" value={heroSummary(entry.defenseJoinHeroes)} />
-                  <Info label="Submitted" value={formatTimestamp(entry.submittedAt)} />
+                  <Info className="participation-kv-heroes" label="Rally Heroes" value={heroSummary(entry.rallyJoinHeroes)} />
+                  <Info className="participation-kv-heroes" label="Defense Heroes" value={heroSummary(entry.defenseJoinHeroes)} />
+                  <div className="participation-entry-spacer" aria-hidden="true" />
+                  <Info className="participation-kv-timestamp" {...entryTimestampInfo(entry)} />
+                  <div className="participation-entry-actions">
+                    <Button size="small" variant="secondary" onClick={() => onStartEdit(entry)} disabled={loading}>
+                      <Pencil aria-hidden="true" />
+                      Edit
+                    </Button>
+                    <Button size="small" variant="danger" onClick={() => onRequestDelete(entry)} disabled={loading}>
+                      <Trash2 aria-hidden="true" />
+                      Delete
+                    </Button>
+                    {entry.sheetSyncStatus === "sheet_sync_failed" && (
+                      <Button size="small" variant="secondary" onClick={() => onRetrySync(entry)} disabled={loading}>
+                        <RotateCcw aria-hidden="true" />
+                        Retry sync
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 {entry.sheetError && <p className="hint">Sheets: {entry.sheetError}</p>}
-                <div className="assign-actions">
-                  <Button size="small" variant="secondary" onClick={() => onStartEdit(entry)} disabled={loading}>
-                    <Pencil aria-hidden="true" />
-                    Edit
-                  </Button>
-                  <Button size="small" variant="danger" onClick={() => onRequestDelete(entry)} disabled={loading}>
-                    <Trash2 aria-hidden="true" />
-                    Delete
-                  </Button>
-                  {entry.sheetSyncStatus === "sheet_sync_failed" && (
-                    <Button size="small" variant="secondary" onClick={() => onRetrySync(entry)} disabled={loading}>
-                      <RotateCcw aria-hidden="true" />
-                      Retry sync
-                    </Button>
-                  )}
-                </div>
               </>
             )}
           </article>
@@ -1066,13 +1067,24 @@ const sortOptions: Array<{ key: AdminSortKey; label: string }> = [
   { key: "sheetSyncStatus", label: "Sync" }
 ];
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value, className }: { label: string; value: string; className?: string }) {
   return (
-    <div className="mini-kv">
+    <div className={cx("mini-kv", className)}>
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
   );
+}
+
+function entryTimestampInfo(entry: ParticipationEntry) {
+  const editedMs = new Date(entry.editedAt).getTime();
+  const submittedMs = new Date(entry.submittedAt).getTime();
+
+  if (editedMs > submittedMs) {
+    return { label: "Last Updated", value: formatTimestamp(entry.editedAt) };
+  }
+
+  return { label: "Submitted", value: formatTimestamp(entry.submittedAt) };
 }
 
 function formFromEntry(entry: ParticipationEntry): ParticipationForm {

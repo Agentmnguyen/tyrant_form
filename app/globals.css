@@ -1082,6 +1082,54 @@ button:focus-visible {
   gap: 8px;
 }
 
+.participation-list {
+  overflow-x: auto;
+}
+
+.participation-card {
+  gap: 8px;
+}
+
+.participation-entry-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.participation-entry-row .mini-kv {
+  flex: 0 0 auto;
+  min-width: 84px;
+  padding: 7px 9px;
+}
+
+.participation-entry-row .participation-kv-event-type {
+  min-width: 118px;
+}
+
+.participation-entry-row .participation-kv-heroes {
+  min-width: 108px;
+}
+
+.participation-entry-row .participation-kv-timestamp {
+  min-width: 132px;
+}
+
+.participation-entry-spacer {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.participation-entry-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
