@@ -935,6 +935,80 @@ button:focus-visible {
   font-weight: 800;
 }
 
+.players-table-wrap {
+  padding: 0;
+}
+
+.players-table-empty {
+  margin: 16px;
+}
+
+.players-table {
+  min-width: 720px;
+}
+
+.players-table th,
+.players-table td {
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+.players-table td:last-child {
+  white-space: nowrap;
+}
+
+.players-table-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.players-edit-row td {
+  background: rgba(4, 13, 23, 0.62);
+}
+
+@media (max-width: 720px) {
+  .players-table {
+    min-width: 0;
+  }
+
+  .players-table thead {
+    display: none;
+  }
+
+  .players-table tbody tr {
+    display: block;
+    margin: 0 12px 10px;
+    border: 1px solid rgba(137, 223, 255, 0.14);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .players-table tbody td {
+    display: grid;
+    grid-template-columns: minmax(108px, 38%) 1fr;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid rgba(137, 223, 255, 0.08);
+  }
+
+  .players-table tbody td:last-child {
+    border-bottom: 0;
+  }
+
+  .players-table tbody td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .players-table-actions {
+    justify-content: flex-start;
+  }
+}
+
 .submission-list {
   gap: 10px;
   padding: 16px;

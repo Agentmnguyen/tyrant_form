@@ -140,74 +140,92 @@ export function PlayersPanel({
         ))}
       </div>
 
-      <div className="submission-list">
+      <div className="players-table-wrap">
         {paginated.items.length === 0 ? (
-          <div className="empty">No players match these filters.</div>
+          <div className="empty players-table-empty">No players match these filters.</div>
         ) : (
-          paginated.items.map((player) => (
-            <article className="submission-card" key={player.id}>
-              {editingPlayerId === player.id && playerEdit ? (
-                <div className="filters-grid">
-                  <Field label="Player Name">
-                    <TextInput
-                      value={playerEdit.playerName}
-                      onChange={(event) => onUpdateEdit({ ...playerEdit, playerName: event.target.value })}
-                    />
-                  </Field>
-                  <Field label="Player ID">
-                    <TextInput
-                      value={playerEdit.playerGameId}
-                      onChange={(event) => onUpdateEdit({ ...playerEdit, playerGameId: event.target.value })}
-                    />
-                  </Field>
-                  <Field label="Alliance">
-                    <SelectField
-                      placeholder="Choose alliance"
-                      value={playerEdit.alliance}
-                      options={ROSTER_CONFIG.alliances.map((alliance) => ({ value: alliance, label: alliance }))}
-                      onChange={(event) => onUpdateEdit({ ...playerEdit, alliance: event.target.value })}
-                    />
-                  </Field>
-                  <div className="assign-actions">
-                    <Button size="small" variant="primary" onClick={onSaveEdit} disabled={loading}>
-                      <Save aria-hidden="true" />
-                      Save
-                    </Button>
-                    <Button size="small" variant="secondary" onClick={onCancelEdit} disabled={loading}>
-                      <X aria-hidden="true" />
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="submission-main">
-                    <div>
-                      <span className={`alliance-badge ${player.alliance.toLowerCase()}`}>{player.alliance}</span>
-                      <h3>{player.playerName}</h3>
-                      <p>{player.playerId}</p>
-                    </div>
-                    <Button size="small" variant="secondary" onClick={() => onStartEdit(player)} disabled={loading}>
-                      <Pencil aria-hidden="true" />
-                      Edit Player
-                    </Button>
-                    <Button size="small" variant="danger" onClick={() => onRequestDelete(player)} disabled={loading}>
-                      <Trash2 aria-hidden="true" />
-                      Delete Player
-                    </Button>
-                  </div>
-                  <div className="submission-grid">
-                    <Info label="Alliance" value={player.alliance} />
-                    <Info
-                      label="Last Participation"
-                      value={player.lastParticipationAt ? formatTimestamp(player.lastParticipationAt) : "Never"}
-                    />
-                    <Info label="Participations" value={String(player.participationCount)} />
-                  </div>
-                </>
-              )}
-            </article>
-          ))
+          <div className="table-scroll">
+            <table className="players-table">
+              <thead>
+                <tr>
+                  <th scope="col">Alliance</th>
+                  <th scope="col">Player Name</th>
+                  <th scope="col">Player ID</th>
+                  <th scope="col">Last Active</th>
+                  <th scope="col">Participation Count</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginated.items.map((player) =>
+                  editingPlayerId === player.id && playerEdit ? (
+                    <tr className="players-edit-row" key={player.id}>
+                      <td data-label="Alliance">
+                        <SelectField
+                          placeholder="Choose alliance"
+                          value={playerEdit.alliance}
+                          options={ROSTER_CONFIG.alliances.map((alliance) => ({ value: alliance, label: alliance }))}
+                          onChange={(event) => onUpdateEdit({ ...playerEdit, alliance: event.target.value })}
+                        />
+                      </td>
+                      <td data-label="Player Name">
+                        <TextInput
+                          value={playerEdit.playerName}
+                          onChange={(event) => onUpdateEdit({ ...playerEdit, playerName: event.target.value })}
+                        />
+                      </td>
+                      <td data-label="Player ID">
+                        <TextInput
+                          value={playerEdit.playerGameId}
+                          onChange={(event) => onUpdateEdit({ ...playerEdit, playerGameId: event.target.value })}
+                        />
+                      </td>
+                      <td data-label="Last Active">—</td>
+                      <td data-label="Participation Count">—</td>
+                      <td data-label="Actions">
+                        <div className="players-table-actions">
+                          <Button size="small" variant="primary" onClick={onSaveEdit} disabled={loading}>
+                            <Save aria-hidden="true" />
+                            Save
+                          </Button>
+                          <Button size="small" variant="secondary" onClick={onCancelEdit} disabled={loading}>
+                            <X aria-hidden="true" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={player.id}>
+                      <td data-label="Alliance">
+                        <span className={`alliance-badge ${player.alliance.toLowerCase()}`}>{player.alliance}</span>
+                      </td>
+                      <td className="strong-text" data-label="Player Name">
+                        {player.playerName}
+                      </td>
+                      <td data-label="Player ID">{player.playerId}</td>
+                      <td data-label="Last Active">
+                        {player.lastParticipationAt ? formatTimestamp(player.lastParticipationAt) : "Never"}
+                      </td>
+                      <td data-label="Participation Count">{player.participationCount}</td>
+                      <td data-label="Actions">
+                        <div className="players-table-actions">
+                          <Button size="small" variant="secondary" onClick={() => onStartEdit(player)} disabled={loading}>
+                            <Pencil aria-hidden="true" />
+                            Edit
+                          </Button>
+                          <Button size="small" variant="danger" onClick={() => onRequestDelete(player)} disabled={loading}>
+                            <Trash2 aria-hidden="true" />
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -230,14 +248,5 @@ export function PlayersPanel({
         </div>
       )}
     </section>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="mini-kv">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
   );
 }
