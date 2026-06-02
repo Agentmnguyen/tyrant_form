@@ -18,7 +18,9 @@ import {
   X
 } from "lucide-react";
 import { ChoiceToggle, Field, SelectField, TextInput } from "@/components/FormControls";
+import { PlayersPanel } from "@/components/admin/PlayersPanel";
 import { Button, Hero, StatCard, SyncBadge, cx } from "@/components/ui";
+import { formatTimestamp } from "@/lib/format";
 import {
   ROSTER_CONFIG,
   allHeroOptions,
@@ -380,6 +382,15 @@ export function RosterAdminDashboard() {
     });
   }
 
+  function cancelPlayerEdit() {
+    setEditingPlayerId(null);
+    setPlayerEdit(null);
+  }
+
+  function updatePlayerEdit(edit: { playerGameId: string; playerName: string; alliance: string }) {
+    setPlayerEdit(edit);
+  }
+
   function changeSort(nextKey: AdminSortKey) {
     if (nextKey === sortKey) {
       setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
@@ -627,64 +638,18 @@ export function RosterAdminDashboard() {
             )}
           </section>
 
-          <section className="panel admin-list-panel">
-            <div className="table-toolbar">
-              <h2>Players</h2>
-              <span>{players.length} tracked</span>
-            </div>
-            <div className="submission-list">
-              {players.map((player) => (
-                <article className="submission-card" key={player.id}>
-                  {editingPlayerId === player.id && playerEdit ? (
-                    <div className="filters-grid">
-                      <Field label="Player Name">
-                        <TextInput value={playerEdit.playerName} onChange={(event) => setPlayerEdit({ ...playerEdit, playerName: event.target.value })} />
-                      </Field>
-                      <Field label="Player ID">
-                        <TextInput value={playerEdit.playerGameId} onChange={(event) => setPlayerEdit({ ...playerEdit, playerGameId: event.target.value })} />
-                      </Field>
-                      <Field label="Alliance">
-                        <SelectField
-                          placeholder="Choose alliance"
-                          value={playerEdit.alliance}
-                          options={ROSTER_CONFIG.alliances.map((alliance) => ({ value: alliance, label: alliance }))}
-                          onChange={(event) => setPlayerEdit({ ...playerEdit, alliance: event.target.value })}
-                        />
-                      </Field>
-                      <div className="assign-actions">
-                        <Button size="small" variant="primary" onClick={savePlayerEdit} disabled={loading}>
-                          <Save aria-hidden="true" />
-                          Save
-                        </Button>
-                        <Button size="small" variant="secondary" onClick={() => setEditingPlayerId(null)} disabled={loading}>
-                          <X aria-hidden="true" />
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="submission-main">
-                        <div>
-                          <span className={`alliance-badge ${player.alliance.toLowerCase()}`}>{player.alliance}</span>
-                          <h3>{player.playerName}</h3>
-                          <p>{player.playerId}</p>
-                        </div>
-                        <Button size="small" variant="secondary" onClick={() => startPlayerEdit(player)} disabled={loading}>
-                          <Pencil aria-hidden="true" />
-                          Edit Player
-                        </Button>
-                        <Button size="small" variant="danger" onClick={() => requestDeletePlayer(player)} disabled={loading}>
-                          <Trash2 aria-hidden="true" />
-                          Delete Player
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </article>
-              ))}
-            </div>
-          </section>
+          <PlayersPanel
+            players={players}
+            participationEntries={entries}
+            loading={loading}
+            editingPlayerId={editingPlayerId}
+            playerEdit={playerEdit}
+            onStartEdit={startPlayerEdit}
+            onUpdateEdit={updatePlayerEdit}
+            onSaveEdit={savePlayerEdit}
+            onCancelEdit={cancelPlayerEdit}
+            onRequestDelete={requestDeletePlayer}
+          />
         </>
       )}
     </main>
@@ -1151,13 +1116,6 @@ function valueForSort(entry: ParticipationEntry, key: AdminSortKey) {
   if (key === "eventName") return entry.event.name;
   if (key === "alliance") return entry.player.alliance;
   return entry[key];
-}
-
-function formatTimestamp(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(new Date(value));
 }
 
 class ApiError extends Error {

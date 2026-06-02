@@ -88,6 +88,19 @@ export type ParticipationPayload = {
   defenseJoinHeroes: DefenseJoinHeroOption[];
 };
 
+export type PlayerWithStats = Player & {
+  participationCount: number;
+  lastParticipationAt: string | null;
+};
+
+export type PlayerSortKey = "playerName" | "lastParticipationAt";
+
+export type PlayerListFilters = {
+  nameSearch: string;
+  idSearch: string;
+  alliance: Alliance | "all";
+};
+
 export type AdminSortKey =
   | "submittedAt"
   | "playerName"
