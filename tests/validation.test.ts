@@ -17,8 +17,8 @@ const validForm: ParticipationForm = {
   lancerHelios: false,
   marksmenFcLevel: "FC10",
   marksmenHelios: true,
-  rallyJoinHeroes: ["Norah", "Renee"],
-  defenseJoinHeroes: ["Ahmose", "Renee"]
+  joinHeroes: ["Norah", "Renee", "Gatot"],
+  joinVoiceCall: true
 };
 
 const testPlayer: Player = {
@@ -56,8 +56,8 @@ const testParticipationEntry: ParticipationEntry = {
   lancerHelios: false,
   marksmenFcLevel: "FC10",
   marksmenHelios: true,
-  rallyJoinHeroes: ["Norah"],
-  defenseJoinHeroes: ["Ahmose"],
+  joinHeroes: ["Norah"],
+  joinVoiceCall: false,
   submittedAt: "2026-05-01T00:00:00.000Z",
   editedAt: "2026-05-01T00:00:00.000Z",
   sheetSyncStatus: "synced",
@@ -75,19 +75,31 @@ test("valid participation form normalizes into a payload", () => {
     assert.equal(result.data.eventId, "event-1");
     assert.equal(result.data.playerGameId, "12345");
     assert.equal(result.data.availability, "Full Event");
-    assert.deepEqual(result.data.rallyJoinHeroes, ["Norah", "Renee"]);
-    assert.deepEqual(result.data.defenseJoinHeroes, ["Ahmose", "Renee"]);
+    assert.deepEqual(result.data.joinHeroes, ["Norah", "Renee", "Gatot"]);
+    assert.equal(result.data.joinVoiceCall, true);
   }
 });
 
 test("empty hero selections are valid", () => {
   const result = validateForm({
     ...validForm,
-    rallyJoinHeroes: [],
-    defenseJoinHeroes: []
+    joinHeroes: []
   });
 
   assert.equal(result.ok, true);
+});
+
+test("null voice call is valid and preserved", () => {
+  const result = validateForm({
+    ...validForm,
+    joinVoiceCall: null
+  });
+
+  assert.equal(result.ok, true);
+
+  if (result.ok) {
+    assert.equal(result.data.joinVoiceCall, null);
+  }
 });
 
 test("hero toggle adds and removes choices", () => {
@@ -95,16 +107,16 @@ test("hero toggle adds and removes choices", () => {
   assert.deepEqual(toggleHeroSelection(["Norah", "Renee"], "Norah"), ["Renee"]);
 });
 
-test("invalid hero choices are rejected by section", () => {
+test("invalid hero choices are rejected", () => {
   const result = validateForm({
     ...validForm,
-    rallyJoinHeroes: ["Ahmose" as never]
+    joinHeroes: ["Gwen" as never]
   });
 
   assert.equal(result.ok, false);
 
   if (!result.ok) {
-    assert.equal(result.fieldErrors.rallyJoinHeroes, "Choose valid rally join heroes.");
+    assert.equal(result.fieldErrors.joinHeroes, "Choose valid rally / defense heroes.");
   }
 });
 

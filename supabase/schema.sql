@@ -5,6 +5,17 @@ create extension if not exists pgcrypto;
 --   This schema creates new normalized tables and does not drop the older tyrant_* tables.
 --   The optional migration block below copies existing tyrant data into the new tables when
 --   those tables exist. Review copied data before removing any legacy tables manually.
+--
+-- Idempotency / resume notes:
+--   Safe to re-run the full file after a partial failure. Most statements use IF NOT EXISTS,
+--   DROP IF EXISTS, CREATE OR REPLACE, or ON CONFLICT DO NOTHING.
+--   If the run failed on CREATE POLICY, everything before the RLS policy section (line ~395)
+--   likely already applied, including join_heroes / join_voice_call columns.
+--   Re-run the full file; policy DROP IF EXISTS blocks make the remainder safe.
+--   Verify with:
+--     select column_name from information_schema.columns
+--       where table_schema = 'public' and table_name = 'participation_entries'
+--       and column_name in ('join_heroes', 'join_voice_call');
 
 create table if not exists public.players (
   id uuid primary key default gen_random_uuid(),
@@ -177,6 +188,31 @@ drop index if exists public.participation_entries_heroes_idx;
 create index if not exists participation_entries_rally_join_heroes_idx on public.participation_entries using gin (rally_join_heroes);
 create index if not exists participation_entries_defense_join_heroes_idx on public.participation_entries using gin (defense_join_heroes);
 create index if not exists participation_entries_sheet_sync_status_idx on public.participation_entries (sheet_sync_status);
+
+alter table public.participation_entries
+  add column if not exists join_heroes text[] not null default '{}'::text[];
+
+alter table public.participation_entries
+  add column if not exists join_voice_call boolean;
+
+alter table public.participation_entries
+  drop constraint if exists participation_entries_join_heroes_check;
+
+alter table public.participation_entries
+  add constraint participation_entries_join_heroes_check check (
+    join_heroes <@ array['Norah', 'Hendrik', 'Gatot', 'Renee', 'Mia', 'Wu Ming', 'Gordan']::text[]
+  );
+
+update public.participation_entries
+set join_heroes = (
+  select coalesce(array_agg(distinct hero order by hero), '{}'::text[])
+  from unnest(rally_join_heroes || defense_join_heroes) as hero
+  where hero in ('Norah', 'Hendrik', 'Gatot', 'Renee', 'Mia', 'Wu Ming', 'Gordan')
+)
+where cardinality(join_heroes) = 0
+  and (cardinality(rally_join_heroes) > 0 or cardinality(defense_join_heroes) > 0);
+
+create index if not exists participation_entries_join_heroes_idx on public.participation_entries using gin (join_heroes);
 
 create or replace function public.touch_updated_at()
 returns trigger
@@ -367,18 +403,23 @@ grant select, insert, update, delete on table public.players to service_role;
 grant select, insert, update on table public.events to service_role;
 grant select, insert, update, delete on table public.participation_entries to service_role;
 
+-- RLS policies: drop before create so re-running this file is safe.
+-- PostgreSQL has no CREATE POLICY IF NOT EXISTS.
+drop policy if exists players_service_role_select on public.players;
 create policy players_service_role_select
   on public.players
   for select
   to service_role
   using (true);
 
+drop policy if exists players_service_role_insert on public.players;
 create policy players_service_role_insert
   on public.players
   for insert
   to service_role
   with check (true);
 
+drop policy if exists players_service_role_update on public.players;
 create policy players_service_role_update
   on public.players
   for update
@@ -386,24 +427,28 @@ create policy players_service_role_update
   using (true)
   with check (true);
 
+drop policy if exists players_service_role_delete on public.players;
 create policy players_service_role_delete
   on public.players
   for delete
   to service_role
   using (true);
 
+drop policy if exists events_service_role_select on public.events;
 create policy events_service_role_select
   on public.events
   for select
   to service_role
   using (true);
 
+drop policy if exists events_service_role_insert on public.events;
 create policy events_service_role_insert
   on public.events
   for insert
   to service_role
   with check (true);
 
+drop policy if exists events_service_role_update on public.events;
 create policy events_service_role_update
   on public.events
   for update
@@ -411,18 +456,21 @@ create policy events_service_role_update
   using (true)
   with check (true);
 
+drop policy if exists participation_entries_service_role_select on public.participation_entries;
 create policy participation_entries_service_role_select
   on public.participation_entries
   for select
   to service_role
   using (true);
 
+drop policy if exists participation_entries_service_role_insert on public.participation_entries;
 create policy participation_entries_service_role_insert
   on public.participation_entries
   for insert
   to service_role
   with check (true);
 
+drop policy if exists participation_entries_service_role_update on public.participation_entries;
 create policy participation_entries_service_role_update
   on public.participation_entries
   for update
@@ -430,6 +478,7 @@ create policy participation_entries_service_role_update
   using (true)
   with check (true);
 
+drop policy if exists participation_entries_service_role_delete on public.participation_entries;
 create policy participation_entries_service_role_delete
   on public.participation_entries
   for delete

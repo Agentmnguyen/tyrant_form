@@ -20,14 +20,8 @@ import {
 import { ChoiceToggle, Field, SelectField, TextInput } from "@/components/FormControls";
 import { PlayersPanel } from "@/components/admin/PlayersPanel";
 import { Button, Hero, StatCard, SyncBadge, cx } from "@/components/ui";
-import { formatTimestamp } from "@/lib/format";
-import {
-  ROSTER_CONFIG,
-  allHeroOptions,
-  type DefenseJoinHeroOption,
-  type EventType,
-  type RallyJoinHeroOption
-} from "@/lib/rosterConfig";
+import { formatTimestamp, voiceCallSummary } from "@/lib/format";
+import { ROSTER_CONFIG, allHeroOptions, type EventType, type JoinHeroOption } from "@/lib/rosterConfig";
 import type { AdminSortKey, ParticipationEntry, ParticipationForm, Player, RosterEvent } from "@/lib/rosterTypes";
 import { toggleHeroSelection, validateForm } from "@/lib/rosterValidation";
 
@@ -69,6 +63,7 @@ export function RosterAdminDashboard() {
   const [fcFilter, setFcFilter] = useState("all");
   const [heliosFilter, setHeliosFilter] = useState("all");
   const [heroFilter, setHeroFilter] = useState("all");
+  const [voiceCallFilter, setVoiceCallFilter] = useState("all");
   const [submittedFilter, setSubmittedFilter] = useState<SubmittedFilter>("submitted");
   const [showArchived, setShowArchived] = useState(false);
   const [sortKey, setSortKey] = useState<AdminSortKey>("submittedAt");
@@ -115,11 +110,13 @@ export function RosterAdminDashboard() {
           heliosFilter === "all" ||
           (heliosFilter === "yes" && (entry.infantryHelios || entry.lancerHelios || entry.marksmenHelios)) ||
           (heliosFilter === "no" && !entry.infantryHelios && !entry.lancerHelios && !entry.marksmenHelios);
-        const heroOk =
-          heroFilter === "all" ||
-          entry.rallyJoinHeroes.includes(heroFilter as RallyJoinHeroOption) ||
-          entry.defenseJoinHeroes.includes(heroFilter as DefenseJoinHeroOption);
-        return searchOk && eventTypeOk && eventOk && archivedOk && allianceOk && availabilityOk && fcOk && heliosOk && heroOk;
+        const heroOk = heroFilter === "all" || entry.joinHeroes.includes(heroFilter as JoinHeroOption);
+        const voiceCallOk =
+          voiceCallFilter === "all" ||
+          (voiceCallFilter === "yes" && entry.joinVoiceCall === true) ||
+          (voiceCallFilter === "no" && entry.joinVoiceCall === false) ||
+          (voiceCallFilter === "not_provided" && entry.joinVoiceCall === null);
+        return searchOk && eventTypeOk && eventOk && archivedOk && allianceOk && availabilityOk && fcOk && heliosOk && heroOk && voiceCallOk;
       })
       .sort((a, b) => compareEntries(a, b, sortKey, sortDirection));
   }, [
@@ -131,6 +128,7 @@ export function RosterAdminDashboard() {
     fcFilter,
     heroFilter,
     heliosFilter,
+    voiceCallFilter,
     search,
     showArchived,
     sortDirection,
@@ -581,6 +579,18 @@ export function RosterAdminDashboard() {
                   onChange={(event) => setHeroFilter(event.target.value || "all")}
                 />
               </Field>
+              <Field label="Voice Call">
+                <SelectField
+                  placeholder="All"
+                  value={voiceCallFilter === "all" ? "" : voiceCallFilter}
+                  options={[
+                    { value: "yes", label: "Yes" },
+                    { value: "no", label: "No" },
+                    { value: "not_provided", label: "Not Provided" }
+                  ]}
+                  onChange={(event) => setVoiceCallFilter(event.target.value || "all")}
+                />
+              </Field>
               <Field label="Submitted">
                 <SelectField
                   placeholder="Submitted"
@@ -798,8 +808,8 @@ function ParticipationList({
                   <Info label="Infantry" value={troopSummary(entry.infantryFcLevel, entry.infantryHelios)} />
                   <Info label="Lancer" value={troopSummary(entry.lancerFcLevel, entry.lancerHelios)} />
                   <Info label="Marksmen" value={troopSummary(entry.marksmenFcLevel, entry.marksmenHelios)} />
-                  <Info className="participation-kv-heroes" label="Rally Heroes" value={heroSummary(entry.rallyJoinHeroes)} />
-                  <Info className="participation-kv-heroes" label="Defense Heroes" value={heroSummary(entry.defenseJoinHeroes)} />
+                  <Info className="participation-kv-heroes" label="Rally / Defense Heroes" value={heroSummary(entry.joinHeroes)} />
+                  <Info label="Voice Call" value={voiceCallSummary(entry.joinVoiceCall)} />
                   <div className="participation-entry-spacer" aria-hidden="true" />
                   <Info className="participation-kv-timestamp" {...entryTimestampInfo(entry)} />
                   <div className="participation-entry-actions">
@@ -844,12 +854,8 @@ function EditParticipationForm({
   onSave: () => void;
   onCancel: () => void;
 }) {
-  function toggleRallyHero(hero: RallyJoinHeroOption) {
-    update("rallyJoinHeroes", toggleHeroSelection(form.rallyJoinHeroes, hero));
-  }
-
-  function toggleDefenseHero(hero: DefenseJoinHeroOption) {
-    update("defenseJoinHeroes", toggleHeroSelection(form.defenseJoinHeroes, hero));
+  function toggleJoinHero(hero: JoinHeroOption) {
+    update("joinHeroes", toggleHeroSelection(form.joinHeroes, hero));
   }
 
   return (
@@ -910,29 +916,28 @@ function EditParticipationForm({
       </div>
 
       <div className="field-block">
-        <span className="field-label">Rally Join Heroes</span>
+        <span className="field-label">Rally / Defense Heroes</span>
         <p className="hint">Select all heroes at 4★ with Level 5 Expedition Skill.</p>
         <div className="choice-grid compact-choice-grid">
-          {ROSTER_CONFIG.rallyJoinHeroOptions.map((hero) => (
-            <ChoiceToggle key={hero} selected={form.rallyJoinHeroes.includes(hero)} onClick={() => toggleRallyHero(hero)}>
+          {ROSTER_CONFIG.joinHeroOptions.map((hero) => (
+            <ChoiceToggle key={hero} selected={form.joinHeroes.includes(hero)} onClick={() => toggleJoinHero(hero)}>
               {hero}
             </ChoiceToggle>
           ))}
         </div>
-        {errors.rallyJoinHeroes && <small className="field-error">{errors.rallyJoinHeroes}</small>}
+        {errors.joinHeroes && <small className="field-error">{errors.joinHeroes}</small>}
       </div>
 
       <div className="field-block">
-        <span className="field-label">Defense Join Heroes</span>
-        <p className="hint">Select all heroes at 4★ with Level 5 Expedition Skill.</p>
-        <div className="choice-grid compact-choice-grid">
-          {ROSTER_CONFIG.defenseJoinHeroOptions.map((hero) => (
-            <ChoiceToggle key={hero} selected={form.defenseJoinHeroes.includes(hero)} onClick={() => toggleDefenseHero(hero)}>
-              {hero}
-            </ChoiceToggle>
-          ))}
+        <span className="field-label">Do you plan to join Voice Call?</span>
+        <div className="choice-grid two compact-choice-grid">
+          <ChoiceToggle selected={form.joinVoiceCall === true} onClick={() => update("joinVoiceCall", true)}>
+            Yes
+          </ChoiceToggle>
+          <ChoiceToggle selected={form.joinVoiceCall === false} onClick={() => update("joinVoiceCall", false)}>
+            No
+          </ChoiceToggle>
         </div>
-        {errors.defenseJoinHeroes && <small className="field-error">{errors.defenseJoinHeroes}</small>}
       </div>
 
 
@@ -1100,8 +1105,8 @@ function formFromEntry(entry: ParticipationEntry): ParticipationForm {
     lancerHelios: entry.lancerHelios,
     marksmenFcLevel: entry.marksmenFcLevel,
     marksmenHelios: entry.marksmenHelios,
-    rallyJoinHeroes: entry.rallyJoinHeroes,
-    defenseJoinHeroes: entry.defenseJoinHeroes
+    joinHeroes: entry.joinHeroes,
+    joinVoiceCall: entry.joinVoiceCall
   };
 }
 

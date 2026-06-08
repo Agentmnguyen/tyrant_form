@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, Lock, Send } from "lucide-react";
 import { ChoiceToggle, Field, SelectField, TextInput } from "@/components/FormControls";
 import { Button, Hero, cx } from "@/components/ui";
-import { ROSTER_CONFIG, type DefenseJoinHeroOption, type RallyJoinHeroOption } from "@/lib/rosterConfig";
+import { voiceCallSummary } from "@/lib/format";
+import { ROSTER_CONFIG, type JoinHeroOption } from "@/lib/rosterConfig";
 import {
   initialParticipationForm,
   type ParticipationEntry,
@@ -384,32 +385,31 @@ function HeroesStep({
   errors: Record<string, string>;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
-  function toggleRallyHero(hero: RallyJoinHeroOption) {
-    update("rallyJoinHeroes", toggleHeroSelection(form.rallyJoinHeroes, hero));
-  }
-
-  function toggleDefenseHero(hero: DefenseJoinHeroOption) {
-    update("defenseJoinHeroes", toggleHeroSelection(form.defenseJoinHeroes, hero));
+  function toggleJoinHero(hero: JoinHeroOption) {
+    update("joinHeroes", toggleHeroSelection(form.joinHeroes, hero));
   }
 
   return (
     <div className="step-stack">
       <HeroChoiceSection
-        title="Rally Join Heroes"
+        title="Rally / Defense Heroes"
         subtitle="Select all heroes at 4★ with Level 5 Expedition Skill."
-        options={ROSTER_CONFIG.rallyJoinHeroOptions}
-        selected={form.rallyJoinHeroes}
-        onToggle={toggleRallyHero}
+        options={ROSTER_CONFIG.joinHeroOptions}
+        selected={form.joinHeroes}
+        onToggle={toggleJoinHero}
       />
-      {errors.rallyJoinHeroes && <small className="field-error">{errors.rallyJoinHeroes}</small>}
-      <HeroChoiceSection
-        title="Defense Join Heroes"
-        subtitle="Select all heroes at 4★ with Level 5 Expedition Skill."
-        options={ROSTER_CONFIG.defenseJoinHeroOptions}
-        selected={form.defenseJoinHeroes}
-        onToggle={toggleDefenseHero}
-      />
-      {errors.defenseJoinHeroes && <small className="field-error">{errors.defenseJoinHeroes}</small>}
+      {errors.joinHeroes && <small className="field-error">{errors.joinHeroes}</small>}
+      <div className="field-block">
+        <span className="field-label">Do you plan to join Voice Call?</span>
+        <div className="choice-grid two compact-choice-grid">
+          <ChoiceToggle selected={form.joinVoiceCall === true} onClick={() => update("joinVoiceCall", true)}>
+            Yes
+          </ChoiceToggle>
+          <ChoiceToggle selected={form.joinVoiceCall === false} onClick={() => update("joinVoiceCall", false)}>
+            No
+          </ChoiceToggle>
+        </div>
+      </div>
     </div>
   );
 }
@@ -424,8 +424,8 @@ function ReviewStep({ form, event, onEdit }: { form: ParticipationForm; event: R
     ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios), 2],
     ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios), 2],
     ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios), 2],
-    ["Rally Join Heroes", heroReview(form.rallyJoinHeroes), 3],
-    ["Defense Join Heroes", heroReview(form.defenseJoinHeroes), 3]
+    ["Rally / Defense Heroes", heroReview(form.joinHeroes), 3],
+    ["Voice Call", voiceCallSummary(form.joinVoiceCall), 3]
   ] as const;
 
   return (

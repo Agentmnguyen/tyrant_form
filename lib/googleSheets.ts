@@ -37,8 +37,8 @@ const PARTICIPATION_HEADERS = [
   "Lancer Helios",
   "Marksmen FC Level",
   "Marksmen Helios",
-  "Rally Join Heroes",
-  "Defense Join Heroes",
+  "Rally / Defense Heroes",
+  "Voice Call",
   "Submitted At",
   "Edited At",
   "Sheet Sync Status",
@@ -230,8 +230,8 @@ function participationRow(entry: ParticipationEntry, override: { rowStatus?: str
     yesNo(entry.lancerHelios),
     entry.marksmenFcLevel,
     yesNo(entry.marksmenHelios),
-    entry.rallyJoinHeroes.join(", "),
-    entry.defenseJoinHeroes.join(", "),
+    entry.joinHeroes.join(", "),
+    voiceCallValue(entry.joinVoiceCall),
     entry.submittedAt,
     entry.editedAt,
     entry.sheetSyncStatus,
@@ -269,6 +269,11 @@ function sheetRange(sheet: string, range: string) {
 
 function yesNo(value: boolean) {
   return value ? "Yes" : "No";
+}
+
+function voiceCallValue(value: boolean | null) {
+  if (value === null) return "";
+  return yesNo(value);
 }
 
 function getSpreadsheetId() {

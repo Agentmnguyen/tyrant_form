@@ -1,3 +1,4 @@
+import { voiceCallSummary } from "@/lib/format";
 import type { ParticipationEntry, Player } from "@/lib/rosterTypes";
 
 const PLAYER_HEADERS = ["player_uuid", "player_id", "player_name", "alliance", "created_at", "updated_at"];
@@ -19,8 +20,8 @@ const PARTICIPATION_HEADERS = [
   "lancer_helios",
   "marksmen_fc_level",
   "marksmen_helios",
-  "rally_join_heroes",
-  "defense_join_heroes",
+  "join_heroes",
+  "join_voice_call",
   "submitted_at",
   "edited_at",
   "google_sheets_sync_status"
@@ -57,8 +58,8 @@ export function buildParticipationCsv(entries: ParticipationEntry[]) {
     String(entry.lancerHelios),
     entry.marksmenFcLevel,
     String(entry.marksmenHelios),
-    entry.rallyJoinHeroes.join("; "),
-    entry.defenseJoinHeroes.join("; "),
+    entry.joinHeroes.join("; "),
+    voiceCallSummary(entry.joinVoiceCall),
     entry.submittedAt,
     entry.editedAt,
     entry.sheetSyncStatus

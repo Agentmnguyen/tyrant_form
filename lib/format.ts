@@ -4,3 +4,8 @@ export function formatTimestamp(value: string) {
     timeStyle: "short"
   }).format(new Date(value));
 }
+
+export function voiceCallSummary(value: boolean | null) {
+  if (value === null) return "Not Provided";
+  return value ? "Yes" : "No";
+}

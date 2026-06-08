@@ -47,8 +47,8 @@ type ParticipationEntryRow = {
   lancer_helios: boolean;
   marksmen_fc_level: ParticipationPayload["marksmenFcLevel"];
   marksmen_helios: boolean;
-  rally_join_heroes: ParticipationPayload["rallyJoinHeroes"];
-  defense_join_heroes: ParticipationPayload["defenseJoinHeroes"];
+  join_heroes: ParticipationPayload["joinHeroes"];
+  join_voice_call: boolean | null;
   submitted_at: string;
   edited_at: string;
   sheet_sync_status: SheetSyncStatus;
@@ -479,8 +479,8 @@ async function upsertParticipationEntry(playerId: string, eventId: string, paylo
         lancer_helios: payload.lancerHelios,
         marksmen_fc_level: payload.marksmenFcLevel,
         marksmen_helios: payload.marksmenHelios,
-        rally_join_heroes: payload.rallyJoinHeroes,
-        defense_join_heroes: payload.defenseJoinHeroes,
+        join_heroes: payload.joinHeroes,
+        join_voice_call: payload.joinVoiceCall,
         edited_at: now,
         sheet_sync_status: "pending",
         sheet_error: null
@@ -562,8 +562,8 @@ export function mapParticipationEntry(row: ParticipationEntryRow): Participation
     lancerHelios: row.lancer_helios,
     marksmenFcLevel: row.marksmen_fc_level,
     marksmenHelios: row.marksmen_helios,
-    rallyJoinHeroes: row.rally_join_heroes || [],
-    defenseJoinHeroes: row.defense_join_heroes || [],
+    joinHeroes: row.join_heroes || [],
+    joinVoiceCall: row.join_voice_call ?? null,
     submittedAt: row.submitted_at,
     editedAt: row.edited_at,
     sheetSyncStatus: row.sheet_sync_status,
