@@ -155,8 +155,9 @@ async function writePlayerHeaders(sheetName: string) {
 }
 
 async function writeParticipationHeaders(...sheetNames: string[]) {
+  const lastColumn = participationLastColumn();
   for (const sheetName of sheetNames) {
-    await updateValues(sheetRange(sheetName, "A1:Y1"), [PARTICIPATION_HEADERS]);
+    await updateValues(sheetRange(sheetName, `A1:${lastColumn}1`), [PARTICIPATION_HEADERS]);
   }
 }
 
@@ -177,23 +178,25 @@ async function upsertPlayer(player: Player) {
 async function upsertParticipation(sheetName: string, entry: ParticipationEntry) {
   const rows = await findRowsById(sheetName, PARTICIPATION_ID_COLUMN, entry.id);
   const values = [participationRow(entry)];
+  const lastColumn = participationLastColumn();
 
   if (rows.length === 0) {
-    await appendValues(sheetRange(sheetName, "A:Y"), values);
+    await appendValues(sheetRange(sheetName, `A:${lastColumn}`), values);
     return;
   }
 
   for (const rowNumber of rows) {
-    await updateValues(sheetRange(sheetName, `A${rowNumber}:Y${rowNumber}`), values);
+    await updateValues(sheetRange(sheetName, `A${rowNumber}:${lastColumn}${rowNumber}`), values);
   }
 }
 
 async function markParticipationDeleted(sheetName: string, entry: ParticipationEntry) {
   const rows = await findRowsById(sheetName, PARTICIPATION_ID_COLUMN, entry.id);
   const values = [participationRow(entry, { rowStatus: "deleted", deletedAt: new Date().toISOString() })];
+  const lastColumn = participationLastColumn();
 
   for (const rowNumber of rows) {
-    await updateValues(sheetRange(sheetName, `A${rowNumber}:Y${rowNumber}`), values);
+    await updateValues(sheetRange(sheetName, `A${rowNumber}:${lastColumn}${rowNumber}`), values);
   }
 }
 
@@ -267,6 +270,23 @@ async function appendValues(range: string, values: string[][]) {
       body: JSON.stringify({ values })
     }
   );
+}
+
+function participationLastColumn() {
+  return columnLetter(PARTICIPATION_HEADERS.length);
+}
+
+function columnLetter(index: number) {
+  let n = index;
+  let result = "";
+
+  while (n > 0) {
+    const remainder = (n - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    n = Math.floor((n - 1) / 26);
+  }
+
+  return result;
 }
 
 function sheetRange(sheet: string, range: string) {
