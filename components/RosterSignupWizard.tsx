@@ -305,8 +305,10 @@ function TroopsStep({
           label="Infantry"
           fcField="infantryFcLevel"
           heliosField="infantryHelios"
+          exaltedT12Field="infantryExaltedT12"
           fcValue={form.infantryFcLevel}
           heliosValue={form.infantryHelios}
+          exaltedT12Value={form.infantryExaltedT12}
           error={errors.infantryFcLevel}
           update={update}
         />
@@ -314,8 +316,10 @@ function TroopsStep({
           label="Lancer"
           fcField="lancerFcLevel"
           heliosField="lancerHelios"
+          exaltedT12Field="lancerExaltedT12"
           fcValue={form.lancerFcLevel}
           heliosValue={form.lancerHelios}
+          exaltedT12Value={form.lancerExaltedT12}
           error={errors.lancerFcLevel}
           update={update}
         />
@@ -323,8 +327,10 @@ function TroopsStep({
           label="Marksmen"
           fcField="marksmenFcLevel"
           heliosField="marksmenHelios"
+          exaltedT12Field="marksmenExaltedT12"
           fcValue={form.marksmenFcLevel}
           heliosValue={form.marksmenHelios}
+          exaltedT12Value={form.marksmenExaltedT12}
           error={errors.marksmenFcLevel}
           update={update}
         />
@@ -337,16 +343,20 @@ function TroopSection({
   label,
   fcField,
   heliosField,
+  exaltedT12Field,
   fcValue,
   heliosValue,
+  exaltedT12Value,
   error,
   update
 }: {
   label: string;
   fcField: "infantryFcLevel" | "lancerFcLevel" | "marksmenFcLevel";
   heliosField: "infantryHelios" | "lancerHelios" | "marksmenHelios";
+  exaltedT12Field: "infantryExaltedT12" | "lancerExaltedT12" | "marksmenExaltedT12";
   fcValue: ParticipationForm[typeof fcField];
   heliosValue: boolean;
+  exaltedT12Value: boolean;
   error?: string;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
@@ -368,6 +378,17 @@ function TroopSection({
             Yes
           </ChoiceToggle>
           <ChoiceToggle selected={!heliosValue} onClick={() => update(heliosField, false)}>
+            No
+          </ChoiceToggle>
+        </div>
+      </div>
+      <div className="field-block">
+        <span className="field-label">Exalted T12</span>
+        <div className="choice-grid two compact-choice-grid">
+          <ChoiceToggle selected={exaltedT12Value} onClick={() => update(exaltedT12Field, true)}>
+            Yes
+          </ChoiceToggle>
+          <ChoiceToggle selected={!exaltedT12Value} onClick={() => update(exaltedT12Field, false)}>
             No
           </ChoiceToggle>
         </div>
@@ -421,9 +442,9 @@ function ReviewStep({ form, event, onEdit }: { form: ParticipationForm; event: R
     ["Player ID", form.playerGameId, 0],
     ["Alliance", form.alliance, 0],
     ["Availability", form.availability, 1],
-    ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios), 2],
-    ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios), 2],
-    ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios), 2],
+    ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios, form.infantryExaltedT12), 2],
+    ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios, form.lancerExaltedT12), 2],
+    ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios, form.marksmenExaltedT12), 2],
     ["Rally / Defense Heroes", heroReview(form.joinHeroes), 3],
     ["Voice Call", voiceCallSummary(form.joinVoiceCall), 3]
   ] as const;
@@ -473,8 +494,8 @@ function HeroChoiceSection<T extends string>({
   );
 }
 
-function troopReview(fcLevel: string, helios: boolean) {
-  return `${fcLevel || "Not selected"} / Helios: ${helios ? "Yes" : "No"}`;
+function troopReview(fcLevel: string, helios: boolean, exaltedT12: boolean) {
+  return `${fcLevel || "Not selected"} / Helios: ${helios ? "Yes" : "No"} / Exalted T12: ${exaltedT12 ? "Yes" : "No"}`;
 }
 
 function heroReview(heroes: readonly string[]) {

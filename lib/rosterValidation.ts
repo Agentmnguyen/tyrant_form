@@ -57,10 +57,13 @@ export function validateForm(form: ParticipationForm): { ok: true; data: Partici
       availability: form.availability as ParticipationPayload["availability"],
       infantryFcLevel: form.infantryFcLevel as ParticipationPayload["infantryFcLevel"],
       infantryHelios: form.infantryHelios,
+      infantryExaltedT12: form.infantryExaltedT12,
       lancerFcLevel: form.lancerFcLevel as ParticipationPayload["lancerFcLevel"],
       lancerHelios: form.lancerHelios,
+      lancerExaltedT12: form.lancerExaltedT12,
       marksmenFcLevel: form.marksmenFcLevel as ParticipationPayload["marksmenFcLevel"],
       marksmenHelios: form.marksmenHelios,
+      marksmenExaltedT12: form.marksmenExaltedT12,
       joinHeroes,
       joinVoiceCall: form.joinVoiceCall
     }
@@ -85,10 +88,13 @@ export function validatePayload(value: unknown): { ok: true; data: Participation
     availability: (payload.availability || "") as ParticipationForm["availability"],
     infantryFcLevel: (payload.infantryFcLevel || "") as ParticipationForm["infantryFcLevel"],
     infantryHelios: Boolean(payload.infantryHelios),
+    infantryExaltedT12: Boolean(payload.infantryExaltedT12),
     lancerFcLevel: (payload.lancerFcLevel || "") as ParticipationForm["lancerFcLevel"],
     lancerHelios: Boolean(payload.lancerHelios),
+    lancerExaltedT12: Boolean(payload.lancerExaltedT12),
     marksmenFcLevel: (payload.marksmenFcLevel || "") as ParticipationForm["marksmenFcLevel"],
     marksmenHelios: Boolean(payload.marksmenHelios),
+    marksmenExaltedT12: Boolean(payload.marksmenExaltedT12),
     joinHeroes: Array.isArray(payload.joinHeroes) ? (payload.joinHeroes as JoinHeroOption[]) : [],
     joinVoiceCall: payload.joinVoiceCall === null || payload.joinVoiceCall === undefined ? null : Boolean(payload.joinVoiceCall)
   });

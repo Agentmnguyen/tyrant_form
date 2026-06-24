@@ -33,10 +33,13 @@ export type ParticipationEntry = {
   availability: Availability;
   infantryFcLevel: FcLevel;
   infantryHelios: boolean;
+  infantryExaltedT12: boolean;
   lancerFcLevel: FcLevel;
   lancerHelios: boolean;
+  lancerExaltedT12: boolean;
   marksmenFcLevel: FcLevel;
   marksmenHelios: boolean;
+  marksmenExaltedT12: boolean;
   joinHeroes: JoinHeroOption[];
   joinVoiceCall: boolean | null;
   submittedAt: string;
@@ -56,10 +59,13 @@ export type ParticipationForm = {
   availability: "" | Availability;
   infantryFcLevel: "" | FcLevel;
   infantryHelios: boolean;
+  infantryExaltedT12: boolean;
   lancerFcLevel: "" | FcLevel;
   lancerHelios: boolean;
+  lancerExaltedT12: boolean;
   marksmenFcLevel: "" | FcLevel;
   marksmenHelios: boolean;
+  marksmenExaltedT12: boolean;
   joinHeroes: JoinHeroOption[];
   joinVoiceCall: boolean | null;
 };
@@ -72,10 +78,13 @@ export type ParticipationPayload = {
   availability: Availability;
   infantryFcLevel: FcLevel;
   infantryHelios: boolean;
+  infantryExaltedT12: boolean;
   lancerFcLevel: FcLevel;
   lancerHelios: boolean;
+  lancerExaltedT12: boolean;
   marksmenFcLevel: FcLevel;
   marksmenHelios: boolean;
+  marksmenExaltedT12: boolean;
   joinHeroes: JoinHeroOption[];
   joinVoiceCall: boolean | null;
 };
@@ -126,10 +135,13 @@ export const initialParticipationForm: ParticipationForm = {
   availability: "",
   infantryFcLevel: "",
   infantryHelios: false,
+  infantryExaltedT12: false,
   lancerFcLevel: "",
   lancerHelios: false,
+  lancerExaltedT12: false,
   marksmenFcLevel: "",
   marksmenHelios: false,
+  marksmenExaltedT12: false,
   joinHeroes: [],
   joinVoiceCall: null
 };

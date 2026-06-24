@@ -43,10 +43,13 @@ type ParticipationEntryRow = {
   availability: ParticipationPayload["availability"];
   infantry_fc_level: ParticipationPayload["infantryFcLevel"];
   infantry_helios: boolean;
+  infantry_exalted_t12: boolean;
   lancer_fc_level: ParticipationPayload["lancerFcLevel"];
   lancer_helios: boolean;
+  lancer_exalted_t12: boolean;
   marksmen_fc_level: ParticipationPayload["marksmenFcLevel"];
   marksmen_helios: boolean;
+  marksmen_exalted_t12: boolean;
   join_heroes: ParticipationPayload["joinHeroes"];
   join_voice_call: boolean | null;
   submitted_at: string;
@@ -475,10 +478,13 @@ async function upsertParticipationEntry(playerId: string, eventId: string, paylo
         availability: payload.availability,
         infantry_fc_level: payload.infantryFcLevel,
         infantry_helios: payload.infantryHelios,
+        infantry_exalted_t12: payload.infantryExaltedT12,
         lancer_fc_level: payload.lancerFcLevel,
         lancer_helios: payload.lancerHelios,
+        lancer_exalted_t12: payload.lancerExaltedT12,
         marksmen_fc_level: payload.marksmenFcLevel,
         marksmen_helios: payload.marksmenHelios,
+        marksmen_exalted_t12: payload.marksmenExaltedT12,
         join_heroes: payload.joinHeroes,
         join_voice_call: payload.joinVoiceCall,
         edited_at: now,
@@ -558,10 +564,13 @@ export function mapParticipationEntry(row: ParticipationEntryRow): Participation
     availability: row.availability,
     infantryFcLevel: row.infantry_fc_level,
     infantryHelios: row.infantry_helios,
+    infantryExaltedT12: row.infantry_exalted_t12,
     lancerFcLevel: row.lancer_fc_level,
     lancerHelios: row.lancer_helios,
+    lancerExaltedT12: row.lancer_exalted_t12,
     marksmenFcLevel: row.marksmen_fc_level,
     marksmenHelios: row.marksmen_helios,
+    marksmenExaltedT12: row.marksmen_exalted_t12,
     joinHeroes: row.join_heroes || [],
     joinVoiceCall: row.join_voice_call ?? null,
     submittedAt: row.submitted_at,

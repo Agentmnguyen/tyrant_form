@@ -62,6 +62,7 @@ export function RosterAdminDashboard() {
   const [availabilityFilter, setAvailabilityFilter] = useState("all");
   const [fcFilter, setFcFilter] = useState("all");
   const [heliosFilter, setHeliosFilter] = useState("all");
+  const [exaltedT12Filter, setExaltedT12Filter] = useState("all");
   const [heroFilter, setHeroFilter] = useState("all");
   const [voiceCallFilter, setVoiceCallFilter] = useState("all");
   const [submittedFilter, setSubmittedFilter] = useState<SubmittedFilter>("submitted");
@@ -110,13 +111,21 @@ export function RosterAdminDashboard() {
           heliosFilter === "all" ||
           (heliosFilter === "yes" && (entry.infantryHelios || entry.lancerHelios || entry.marksmenHelios)) ||
           (heliosFilter === "no" && !entry.infantryHelios && !entry.lancerHelios && !entry.marksmenHelios);
+        const exaltedT12Ok =
+          exaltedT12Filter === "all" ||
+          (exaltedT12Filter === "yes" &&
+            (entry.infantryExaltedT12 || entry.lancerExaltedT12 || entry.marksmenExaltedT12)) ||
+          (exaltedT12Filter === "no" &&
+            !entry.infantryExaltedT12 &&
+            !entry.lancerExaltedT12 &&
+            !entry.marksmenExaltedT12);
         const heroOk = heroFilter === "all" || entry.joinHeroes.includes(heroFilter as JoinHeroOption);
         const voiceCallOk =
           voiceCallFilter === "all" ||
           (voiceCallFilter === "yes" && entry.joinVoiceCall === true) ||
           (voiceCallFilter === "no" && entry.joinVoiceCall === false) ||
           (voiceCallFilter === "not_provided" && entry.joinVoiceCall === null);
-        return searchOk && eventTypeOk && eventOk && archivedOk && allianceOk && availabilityOk && fcOk && heliosOk && heroOk && voiceCallOk;
+        return searchOk && eventTypeOk && eventOk && archivedOk && allianceOk && availabilityOk && fcOk && heliosOk && exaltedT12Ok && heroOk && voiceCallOk;
       })
       .sort((a, b) => compareEntries(a, b, sortKey, sortDirection));
   }, [
@@ -128,6 +137,7 @@ export function RosterAdminDashboard() {
     fcFilter,
     heroFilter,
     heliosFilter,
+    exaltedT12Filter,
     voiceCallFilter,
     search,
     showArchived,
@@ -571,6 +581,17 @@ export function RosterAdminDashboard() {
                   onChange={(event) => setHeliosFilter(event.target.value || "all")}
                 />
               </Field>
+              <Field label="Exalted T12 Capable">
+                <SelectField
+                  placeholder="All"
+                  value={exaltedT12Filter === "all" ? "" : exaltedT12Filter}
+                  options={[
+                    { value: "yes", label: "Yes" },
+                    { value: "no", label: "No" }
+                  ]}
+                  onChange={(event) => setExaltedT12Filter(event.target.value || "all")}
+                />
+              </Field>
               <Field label="Hero Ownership">
                 <SelectField
                   placeholder="All heroes"
@@ -805,9 +826,9 @@ function ParticipationList({
                 <div className="participation-entry-row">
                   <Info className="participation-kv-event-type" label="Event Type" value={entry.event.eventType} />
                   <Info label="Availability" value={entry.availability} />
-                  <Info label="Infantry" value={troopSummary(entry.infantryFcLevel, entry.infantryHelios)} />
-                  <Info label="Lancer" value={troopSummary(entry.lancerFcLevel, entry.lancerHelios)} />
-                  <Info label="Marksmen" value={troopSummary(entry.marksmenFcLevel, entry.marksmenHelios)} />
+                  <Info label="Infantry" value={troopSummary(entry.infantryFcLevel, entry.infantryHelios, entry.infantryExaltedT12)} />
+                  <Info label="Lancer" value={troopSummary(entry.lancerFcLevel, entry.lancerHelios, entry.lancerExaltedT12)} />
+                  <Info label="Marksmen" value={troopSummary(entry.marksmenFcLevel, entry.marksmenHelios, entry.marksmenExaltedT12)} />
                   <Info className="participation-kv-heroes" label="Rally / Defense Heroes" value={heroSummary(entry.joinHeroes)} />
                   <Info label="Voice Call" value={voiceCallSummary(entry.joinVoiceCall)} />
                   <div className="participation-entry-spacer" aria-hidden="true" />
@@ -890,8 +911,10 @@ function EditParticipationForm({
           label="Infantry"
           fcField="infantryFcLevel"
           heliosField="infantryHelios"
+          exaltedT12Field="infantryExaltedT12"
           fcValue={form.infantryFcLevel}
           heliosValue={form.infantryHelios}
+          exaltedT12Value={form.infantryExaltedT12}
           error={errors.infantryFcLevel}
           update={update}
         />
@@ -899,8 +922,10 @@ function EditParticipationForm({
           label="Lancer"
           fcField="lancerFcLevel"
           heliosField="lancerHelios"
+          exaltedT12Field="lancerExaltedT12"
           fcValue={form.lancerFcLevel}
           heliosValue={form.lancerHelios}
+          exaltedT12Value={form.lancerExaltedT12}
           error={errors.lancerFcLevel}
           update={update}
         />
@@ -908,8 +933,10 @@ function EditParticipationForm({
           label="Marksmen"
           fcField="marksmenFcLevel"
           heliosField="marksmenHelios"
+          exaltedT12Field="marksmenExaltedT12"
           fcValue={form.marksmenFcLevel}
           heliosValue={form.marksmenHelios}
+          exaltedT12Value={form.marksmenExaltedT12}
           error={errors.marksmenFcLevel}
           update={update}
         />
@@ -959,16 +986,20 @@ function EditTroopSection({
   label,
   fcField,
   heliosField,
+  exaltedT12Field,
   fcValue,
   heliosValue,
+  exaltedT12Value,
   error,
   update
 }: {
   label: string;
   fcField: "infantryFcLevel" | "lancerFcLevel" | "marksmenFcLevel";
   heliosField: "infantryHelios" | "lancerHelios" | "marksmenHelios";
+  exaltedT12Field: "infantryExaltedT12" | "lancerExaltedT12" | "marksmenExaltedT12";
   fcValue: ParticipationForm[typeof fcField];
   heliosValue: boolean;
+  exaltedT12Value: boolean;
   error?: string;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
@@ -990,6 +1021,17 @@ function EditTroopSection({
             Yes
           </ChoiceToggle>
           <ChoiceToggle selected={!heliosValue} onClick={() => update(heliosField, false)}>
+            No
+          </ChoiceToggle>
+        </div>
+      </div>
+      <div className="field-block">
+        <span className="field-label">Exalted T12</span>
+        <div className="choice-grid two compact-choice-grid">
+          <ChoiceToggle selected={exaltedT12Value} onClick={() => update(exaltedT12Field, true)}>
+            Yes
+          </ChoiceToggle>
+          <ChoiceToggle selected={!exaltedT12Value} onClick={() => update(exaltedT12Field, false)}>
             No
           </ChoiceToggle>
         </div>
@@ -1101,17 +1143,20 @@ function formFromEntry(entry: ParticipationEntry): ParticipationForm {
     availability: entry.availability,
     infantryFcLevel: entry.infantryFcLevel,
     infantryHelios: entry.infantryHelios,
+    infantryExaltedT12: entry.infantryExaltedT12,
     lancerFcLevel: entry.lancerFcLevel,
     lancerHelios: entry.lancerHelios,
+    lancerExaltedT12: entry.lancerExaltedT12,
     marksmenFcLevel: entry.marksmenFcLevel,
     marksmenHelios: entry.marksmenHelios,
+    marksmenExaltedT12: entry.marksmenExaltedT12,
     joinHeroes: entry.joinHeroes,
     joinVoiceCall: entry.joinVoiceCall
   };
 }
 
-function troopSummary(fcLevel: string, helios: boolean) {
-  return `${fcLevel} / Helios: ${helios ? "Yes" : "No"}`;
+function troopSummary(fcLevel: string, helios: boolean, exaltedT12: boolean) {
+  return `${fcLevel} / Helios: ${helios ? "Yes" : "No"} / Exalted T12: ${exaltedT12 ? "Yes" : "No"}`;
 }
 
 function heroSummary(heroes: readonly string[]) {
