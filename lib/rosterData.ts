@@ -44,12 +44,15 @@ type ParticipationEntryRow = {
   infantry_fc_level: ParticipationPayload["infantryFcLevel"];
   infantry_helios: boolean;
   infantry_exalted_t12: boolean;
+  infantry_exalted_skill_level: ParticipationPayload["infantryExaltedSkillLevel"];
   lancer_fc_level: ParticipationPayload["lancerFcLevel"];
   lancer_helios: boolean;
   lancer_exalted_t12: boolean;
+  lancer_exalted_skill_level: ParticipationPayload["lancerExaltedSkillLevel"];
   marksmen_fc_level: ParticipationPayload["marksmenFcLevel"];
   marksmen_helios: boolean;
   marksmen_exalted_t12: boolean;
+  marksmen_exalted_skill_level: ParticipationPayload["marksmenExaltedSkillLevel"];
   join_heroes: ParticipationPayload["joinHeroes"];
   join_voice_call: boolean | null;
   submitted_at: string;
@@ -479,12 +482,15 @@ async function upsertParticipationEntry(playerId: string, eventId: string, paylo
         infantry_fc_level: payload.infantryFcLevel,
         infantry_helios: payload.infantryHelios,
         infantry_exalted_t12: payload.infantryExaltedT12,
+        infantry_exalted_skill_level: payload.infantryExaltedSkillLevel,
         lancer_fc_level: payload.lancerFcLevel,
         lancer_helios: payload.lancerHelios,
         lancer_exalted_t12: payload.lancerExaltedT12,
+        lancer_exalted_skill_level: payload.lancerExaltedSkillLevel,
         marksmen_fc_level: payload.marksmenFcLevel,
         marksmen_helios: payload.marksmenHelios,
         marksmen_exalted_t12: payload.marksmenExaltedT12,
+        marksmen_exalted_skill_level: payload.marksmenExaltedSkillLevel,
         join_heroes: payload.joinHeroes,
         join_voice_call: payload.joinVoiceCall,
         edited_at: now,
@@ -565,12 +571,15 @@ export function mapParticipationEntry(row: ParticipationEntryRow): Participation
     infantryFcLevel: row.infantry_fc_level,
     infantryHelios: row.infantry_helios,
     infantryExaltedT12: row.infantry_exalted_t12,
+    infantryExaltedSkillLevel: row.infantry_exalted_skill_level ?? null,
     lancerFcLevel: row.lancer_fc_level,
     lancerHelios: row.lancer_helios,
     lancerExaltedT12: row.lancer_exalted_t12,
+    lancerExaltedSkillLevel: row.lancer_exalted_skill_level ?? null,
     marksmenFcLevel: row.marksmen_fc_level,
     marksmenHelios: row.marksmen_helios,
     marksmenExaltedT12: row.marksmen_exalted_t12,
+    marksmenExaltedSkillLevel: row.marksmen_exalted_skill_level ?? null,
     joinHeroes: row.join_heroes || [],
     joinVoiceCall: row.join_voice_call ?? null,
     submittedAt: row.submitted_at,

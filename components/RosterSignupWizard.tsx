@@ -306,10 +306,13 @@ function TroopsStep({
           fcField="infantryFcLevel"
           heliosField="infantryHelios"
           exaltedT12Field="infantryExaltedT12"
+          exaltedSkillLevelField="infantryExaltedSkillLevel"
           fcValue={form.infantryFcLevel}
           heliosValue={form.infantryHelios}
           exaltedT12Value={form.infantryExaltedT12}
+          exaltedSkillLevelValue={form.infantryExaltedSkillLevel}
           error={errors.infantryFcLevel}
+          skillLevelError={errors.infantryExaltedSkillLevel}
           update={update}
         />
         <TroopSection
@@ -317,10 +320,13 @@ function TroopsStep({
           fcField="lancerFcLevel"
           heliosField="lancerHelios"
           exaltedT12Field="lancerExaltedT12"
+          exaltedSkillLevelField="lancerExaltedSkillLevel"
           fcValue={form.lancerFcLevel}
           heliosValue={form.lancerHelios}
           exaltedT12Value={form.lancerExaltedT12}
+          exaltedSkillLevelValue={form.lancerExaltedSkillLevel}
           error={errors.lancerFcLevel}
+          skillLevelError={errors.lancerExaltedSkillLevel}
           update={update}
         />
         <TroopSection
@@ -328,10 +334,13 @@ function TroopsStep({
           fcField="marksmenFcLevel"
           heliosField="marksmenHelios"
           exaltedT12Field="marksmenExaltedT12"
+          exaltedSkillLevelField="marksmenExaltedSkillLevel"
           fcValue={form.marksmenFcLevel}
           heliosValue={form.marksmenHelios}
           exaltedT12Value={form.marksmenExaltedT12}
+          exaltedSkillLevelValue={form.marksmenExaltedSkillLevel}
           error={errors.marksmenFcLevel}
+          skillLevelError={errors.marksmenExaltedSkillLevel}
           update={update}
         />
       </div>
@@ -344,20 +353,26 @@ function TroopSection({
   fcField,
   heliosField,
   exaltedT12Field,
+  exaltedSkillLevelField,
   fcValue,
   heliosValue,
   exaltedT12Value,
+  exaltedSkillLevelValue,
   error,
+  skillLevelError,
   update
 }: {
   label: string;
   fcField: "infantryFcLevel" | "lancerFcLevel" | "marksmenFcLevel";
   heliosField: "infantryHelios" | "lancerHelios" | "marksmenHelios";
   exaltedT12Field: "infantryExaltedT12" | "lancerExaltedT12" | "marksmenExaltedT12";
+  exaltedSkillLevelField: "infantryExaltedSkillLevel" | "lancerExaltedSkillLevel" | "marksmenExaltedSkillLevel";
   fcValue: ParticipationForm[typeof fcField];
   heliosValue: boolean;
   exaltedT12Value: boolean;
+  exaltedSkillLevelValue: ParticipationForm[typeof exaltedSkillLevelField];
   error?: string;
+  skillLevelError?: string;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
   return (
@@ -388,11 +403,29 @@ function TroopSection({
           <ChoiceToggle selected={exaltedT12Value} onClick={() => update(exaltedT12Field, true)}>
             Yes
           </ChoiceToggle>
-          <ChoiceToggle selected={!exaltedT12Value} onClick={() => update(exaltedT12Field, false)}>
+          <ChoiceToggle
+            selected={!exaltedT12Value}
+            onClick={() => {
+              update(exaltedT12Field, false);
+              update(exaltedSkillLevelField, "");
+            }}
+          >
             No
           </ChoiceToggle>
         </div>
       </div>
+      {exaltedT12Value && (
+        <Field label="Skill Level" error={skillLevelError}>
+          <SelectField
+            placeholder="Choose skill level"
+            value={exaltedSkillLevelValue}
+            options={ROSTER_CONFIG.exaltedSkillLevels.map((level) => ({ value: level, label: level }))}
+            onChange={(event) =>
+              update(exaltedSkillLevelField, event.target.value as ParticipationForm[typeof exaltedSkillLevelField])
+            }
+          />
+        </Field>
+      )}
     </section>
   );
 }
@@ -442,9 +475,9 @@ function ReviewStep({ form, event, onEdit }: { form: ParticipationForm; event: R
     ["Player ID", form.playerGameId, 0],
     ["Alliance", form.alliance, 0],
     ["Availability", form.availability, 1],
-    ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios, form.infantryExaltedT12), 2],
-    ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios, form.lancerExaltedT12), 2],
-    ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios, form.marksmenExaltedT12), 2],
+    ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios, form.infantryExaltedT12, form.infantryExaltedSkillLevel), 2],
+    ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios, form.lancerExaltedT12, form.lancerExaltedSkillLevel), 2],
+    ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios, form.marksmenExaltedT12, form.marksmenExaltedSkillLevel), 2],
     ["Rally / Defense Heroes", heroReview(form.joinHeroes), 3],
     ["Voice Call", voiceCallSummary(form.joinVoiceCall), 3]
   ] as const;
@@ -494,8 +527,9 @@ function HeroChoiceSection<T extends string>({
   );
 }
 
-function troopReview(fcLevel: string, helios: boolean, exaltedT12: boolean) {
-  return `${fcLevel || "Not selected"} / Helios: ${helios ? "Yes" : "No"} / Exalted T12: ${exaltedT12 ? "Yes" : "No"}`;
+function troopReview(fcLevel: string, helios: boolean, exaltedT12: boolean, exaltedSkillLevel: string) {
+  const exalted = exaltedT12 ? `Yes${exaltedSkillLevel ? ` (Skill ${exaltedSkillLevel})` : ""}` : "No";
+  return `${fcLevel || "Not selected"} / Helios: ${helios ? "Yes" : "No"} / Exalted T12: ${exalted}`;
 }
 
 function heroReview(heroes: readonly string[]) {

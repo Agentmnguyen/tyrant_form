@@ -1,5 +1,5 @@
-import { isAlliance, isAvailability, isFcLevel, isJoinHeroOption } from "@/lib/rosterConfig";
-import type { JoinHeroOption } from "@/lib/rosterConfig";
+import { isAlliance, isAvailability, isExaltedSkillLevel, isFcLevel, isJoinHeroOption } from "@/lib/rosterConfig";
+import type { ExaltedSkillLevel, JoinHeroOption } from "@/lib/rosterConfig";
 import type { ParticipationForm, ParticipationPayload } from "@/lib/rosterTypes";
 
 export function validateStep(step: number, form: ParticipationForm): string {
@@ -15,7 +15,14 @@ export function validateStep(step: number, form: ParticipationForm): string {
   }
 
   if (step === 2) {
-    return firstError(fieldErrors, ["infantryFcLevel", "lancerFcLevel", "marksmenFcLevel"]);
+    return firstError(fieldErrors, [
+      "infantryFcLevel",
+      "infantryExaltedSkillLevel",
+      "lancerFcLevel",
+      "lancerExaltedSkillLevel",
+      "marksmenFcLevel",
+      "marksmenExaltedSkillLevel"
+    ]);
   }
 
   if (step === 3) {
@@ -41,6 +48,12 @@ export function validateForm(form: ParticipationForm): { ok: true; data: Partici
   if (!form.infantryFcLevel || !isFcLevel(form.infantryFcLevel)) fieldErrors.infantryFcLevel = "Choose Infantry FC level.";
   if (!form.lancerFcLevel || !isFcLevel(form.lancerFcLevel)) fieldErrors.lancerFcLevel = "Choose Lancer FC level.";
   if (!form.marksmenFcLevel || !isFcLevel(form.marksmenFcLevel)) fieldErrors.marksmenFcLevel = "Choose Marksmen FC level.";
+  if (form.infantryExaltedT12 && !isExaltedSkillLevel(form.infantryExaltedSkillLevel))
+    fieldErrors.infantryExaltedSkillLevel = "Choose Infantry Exalted T12 skill level.";
+  if (form.lancerExaltedT12 && !isExaltedSkillLevel(form.lancerExaltedSkillLevel))
+    fieldErrors.lancerExaltedSkillLevel = "Choose Lancer Exalted T12 skill level.";
+  if (form.marksmenExaltedT12 && !isExaltedSkillLevel(form.marksmenExaltedSkillLevel))
+    fieldErrors.marksmenExaltedSkillLevel = "Choose Marksmen Exalted T12 skill level.";
   if (hasInvalidJoinHero) fieldErrors.joinHeroes = "Choose valid rally / defense heroes.";
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -58,12 +71,15 @@ export function validateForm(form: ParticipationForm): { ok: true; data: Partici
       infantryFcLevel: form.infantryFcLevel as ParticipationPayload["infantryFcLevel"],
       infantryHelios: form.infantryHelios,
       infantryExaltedT12: form.infantryExaltedT12,
+      infantryExaltedSkillLevel: form.infantryExaltedT12 ? (form.infantryExaltedSkillLevel as ExaltedSkillLevel) : null,
       lancerFcLevel: form.lancerFcLevel as ParticipationPayload["lancerFcLevel"],
       lancerHelios: form.lancerHelios,
       lancerExaltedT12: form.lancerExaltedT12,
+      lancerExaltedSkillLevel: form.lancerExaltedT12 ? (form.lancerExaltedSkillLevel as ExaltedSkillLevel) : null,
       marksmenFcLevel: form.marksmenFcLevel as ParticipationPayload["marksmenFcLevel"],
       marksmenHelios: form.marksmenHelios,
       marksmenExaltedT12: form.marksmenExaltedT12,
+      marksmenExaltedSkillLevel: form.marksmenExaltedT12 ? (form.marksmenExaltedSkillLevel as ExaltedSkillLevel) : null,
       joinHeroes,
       joinVoiceCall: form.joinVoiceCall
     }
@@ -89,12 +105,15 @@ export function validatePayload(value: unknown): { ok: true; data: Participation
     infantryFcLevel: (payload.infantryFcLevel || "") as ParticipationForm["infantryFcLevel"],
     infantryHelios: Boolean(payload.infantryHelios),
     infantryExaltedT12: Boolean(payload.infantryExaltedT12),
+    infantryExaltedSkillLevel: toFormSkillLevel(payload.infantryExaltedSkillLevel),
     lancerFcLevel: (payload.lancerFcLevel || "") as ParticipationForm["lancerFcLevel"],
     lancerHelios: Boolean(payload.lancerHelios),
     lancerExaltedT12: Boolean(payload.lancerExaltedT12),
+    lancerExaltedSkillLevel: toFormSkillLevel(payload.lancerExaltedSkillLevel),
     marksmenFcLevel: (payload.marksmenFcLevel || "") as ParticipationForm["marksmenFcLevel"],
     marksmenHelios: Boolean(payload.marksmenHelios),
     marksmenExaltedT12: Boolean(payload.marksmenExaltedT12),
+    marksmenExaltedSkillLevel: toFormSkillLevel(payload.marksmenExaltedSkillLevel),
     joinHeroes: Array.isArray(payload.joinHeroes) ? (payload.joinHeroes as JoinHeroOption[]) : [],
     joinVoiceCall: payload.joinVoiceCall === null || payload.joinVoiceCall === undefined ? null : Boolean(payload.joinVoiceCall)
   });
@@ -110,6 +129,11 @@ export function toggleHeroSelection<T extends string>(current: readonly T[], her
 
 export function normalizePlayerGameId(playerGameId: string) {
   return playerGameId.trim().toLowerCase();
+}
+
+function toFormSkillLevel(value: unknown): ParticipationForm["infantryExaltedSkillLevel"] {
+  const level = value === null || value === undefined ? "" : String(value);
+  return isExaltedSkillLevel(level) ? level : "";
 }
 
 function firstError(errors: Record<string, string>, keys: string[]) {

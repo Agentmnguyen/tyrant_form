@@ -1,4 +1,4 @@
-import type { Alliance, Availability, EventStatus, EventType, FcLevel, JoinHeroOption } from "@/lib/rosterConfig";
+import type { Alliance, Availability, EventStatus, EventType, ExaltedSkillLevel, FcLevel, JoinHeroOption } from "@/lib/rosterConfig";
 
 export type SheetSyncStatus = "pending" | "synced" | "sheet_sync_failed";
 
@@ -34,12 +34,15 @@ export type ParticipationEntry = {
   infantryFcLevel: FcLevel;
   infantryHelios: boolean;
   infantryExaltedT12: boolean;
+  infantryExaltedSkillLevel: ExaltedSkillLevel | null;
   lancerFcLevel: FcLevel;
   lancerHelios: boolean;
   lancerExaltedT12: boolean;
+  lancerExaltedSkillLevel: ExaltedSkillLevel | null;
   marksmenFcLevel: FcLevel;
   marksmenHelios: boolean;
   marksmenExaltedT12: boolean;
+  marksmenExaltedSkillLevel: ExaltedSkillLevel | null;
   joinHeroes: JoinHeroOption[];
   joinVoiceCall: boolean | null;
   submittedAt: string;
@@ -60,12 +63,15 @@ export type ParticipationForm = {
   infantryFcLevel: "" | FcLevel;
   infantryHelios: boolean;
   infantryExaltedT12: boolean;
+  infantryExaltedSkillLevel: "" | ExaltedSkillLevel;
   lancerFcLevel: "" | FcLevel;
   lancerHelios: boolean;
   lancerExaltedT12: boolean;
+  lancerExaltedSkillLevel: "" | ExaltedSkillLevel;
   marksmenFcLevel: "" | FcLevel;
   marksmenHelios: boolean;
   marksmenExaltedT12: boolean;
+  marksmenExaltedSkillLevel: "" | ExaltedSkillLevel;
   joinHeroes: JoinHeroOption[];
   joinVoiceCall: boolean | null;
 };
@@ -79,12 +85,15 @@ export type ParticipationPayload = {
   infantryFcLevel: FcLevel;
   infantryHelios: boolean;
   infantryExaltedT12: boolean;
+  infantryExaltedSkillLevel: ExaltedSkillLevel | null;
   lancerFcLevel: FcLevel;
   lancerHelios: boolean;
   lancerExaltedT12: boolean;
+  lancerExaltedSkillLevel: ExaltedSkillLevel | null;
   marksmenFcLevel: FcLevel;
   marksmenHelios: boolean;
   marksmenExaltedT12: boolean;
+  marksmenExaltedSkillLevel: ExaltedSkillLevel | null;
   joinHeroes: JoinHeroOption[];
   joinVoiceCall: boolean | null;
 };
@@ -136,12 +145,15 @@ export const initialParticipationForm: ParticipationForm = {
   infantryFcLevel: "",
   infantryHelios: false,
   infantryExaltedT12: false,
+  infantryExaltedSkillLevel: "",
   lancerFcLevel: "",
   lancerHelios: false,
   lancerExaltedT12: false,
+  lancerExaltedSkillLevel: "",
   marksmenFcLevel: "",
   marksmenHelios: false,
   marksmenExaltedT12: false,
+  marksmenExaltedSkillLevel: "",
   joinHeroes: [],
   joinVoiceCall: null
 };

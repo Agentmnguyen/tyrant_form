@@ -7,6 +7,7 @@ export const ROSTER_CONFIG = {
   alliances: ["STD", "LOC", "HPY", "TEX", "NGL", "DIE"],
   availabilityOptions: ["Full Event", "3-4 hours", "2-3 hours", "Casual / Under 2 hours"],
   fcLevels: ["FC5", "FC6", "FC7", "FC8", "FC9", "FC10"],
+  exaltedSkillLevels: ["0", "1", "2", "3"],
   troopTypes: ["Infantry", "Lancer", "Marksmen"],
   joinHeroOptions: ["Norah", "Hendrik", "Gatot", "Renee", "Mia", "Wu Ming", "Gordan"]
 } as const;
@@ -16,6 +17,7 @@ export type EventStatus = (typeof ROSTER_CONFIG.eventStatuses)[number];
 export type Alliance = (typeof ROSTER_CONFIG.alliances)[number];
 export type Availability = (typeof ROSTER_CONFIG.availabilityOptions)[number];
 export type FcLevel = (typeof ROSTER_CONFIG.fcLevels)[number];
+export type ExaltedSkillLevel = (typeof ROSTER_CONFIG.exaltedSkillLevels)[number];
 export type TroopType = (typeof ROSTER_CONFIG.troopTypes)[number];
 export type JoinHeroOption = (typeof ROSTER_CONFIG.joinHeroOptions)[number];
 
@@ -37,6 +39,10 @@ export function isAvailability(value: string): value is Availability {
 
 export function isFcLevel(value: string): value is FcLevel {
   return (ROSTER_CONFIG.fcLevels as readonly string[]).includes(value);
+}
+
+export function isExaltedSkillLevel(value: string): value is ExaltedSkillLevel {
+  return (ROSTER_CONFIG.exaltedSkillLevels as readonly string[]).includes(value);
 }
 
 export function isJoinHeroOption(value: string): value is JoinHeroOption {

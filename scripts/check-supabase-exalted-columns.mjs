@@ -55,19 +55,22 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 const { data, error } = await supabase
   .from("participation_entries")
-  .select("id, infantry_exalted_t12, lancer_exalted_t12, marksmen_exalted_t12")
+  .select(
+    "id, infantry_exalted_t12, lancer_exalted_t12, marksmen_exalted_t12, infantry_exalted_skill_level, lancer_exalted_skill_level, marksmen_exalted_skill_level"
+  )
   .limit(1);
 
 if (error) {
   console.error("\nExalted T12 columns are NOT available to the API yet.\n");
   console.error(`Error: ${error.message}\n`);
 
-  if (error.message.includes("schema cache") || error.message.includes("infantry_exalted_t12")) {
+  if (error.message.includes("schema cache") || error.message.includes("exalted")) {
     console.error("Next steps:");
     console.error("1. Confirm this URL matches your Vercel NEXT_PUBLIC_SUPABASE_URL");
     console.error("2. In that Supabase project SQL Editor, run:");
     console.error("   supabase/migrations/add_exalted_t12_columns.sql");
-    console.error("3. Verify the SELECT in that script returns 3 rows");
+    console.error("   supabase/migrations/add_exalted_skill_level_columns.sql");
+    console.error("3. Verify the SELECT in each script returns 3 rows");
     console.error("4. Wait 10-30s, then run this script again");
   }
 

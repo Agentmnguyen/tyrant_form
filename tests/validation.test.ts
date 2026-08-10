@@ -14,12 +14,15 @@ const validForm: ParticipationForm = {
   infantryFcLevel: "FC8",
   infantryHelios: true,
   infantryExaltedT12: false,
+  infantryExaltedSkillLevel: "",
   lancerFcLevel: "FC8",
   lancerHelios: false,
   lancerExaltedT12: true,
+  lancerExaltedSkillLevel: "2",
   marksmenFcLevel: "FC10",
   marksmenHelios: true,
   marksmenExaltedT12: false,
+  marksmenExaltedSkillLevel: "",
   joinHeroes: ["Norah", "Renee", "Gatot"],
   joinVoiceCall: true
 };
@@ -56,12 +59,15 @@ const testParticipationEntry: ParticipationEntry = {
   infantryFcLevel: "FC8",
   infantryHelios: true,
   infantryExaltedT12: false,
+  infantryExaltedSkillLevel: null,
   lancerFcLevel: "FC8",
   lancerHelios: false,
   lancerExaltedT12: true,
+  lancerExaltedSkillLevel: "2",
   marksmenFcLevel: "FC10",
   marksmenHelios: true,
   marksmenExaltedT12: false,
+  marksmenExaltedSkillLevel: null,
   joinHeroes: ["Norah"],
   joinVoiceCall: false,
   submittedAt: "2026-05-01T00:00:00.000Z",
@@ -83,6 +89,33 @@ test("valid participation form normalizes into a payload", () => {
     assert.equal(result.data.availability, "Full Event");
     assert.deepEqual(result.data.joinHeroes, ["Norah", "Renee", "Gatot"]);
     assert.equal(result.data.joinVoiceCall, true);
+    assert.equal(result.data.lancerExaltedSkillLevel, "2");
+  }
+});
+
+test("exalted t12 requires a skill level", () => {
+  const result = validateForm({
+    ...validForm,
+    lancerExaltedSkillLevel: ""
+  });
+
+  assert.equal(result.ok, false);
+
+  if (!result.ok) {
+    assert.equal(result.fieldErrors.lancerExaltedSkillLevel, "Choose Lancer Exalted T12 skill level.");
+  }
+});
+
+test("skill level is dropped when exalted t12 is no", () => {
+  const result = validateForm({
+    ...validForm,
+    lancerExaltedT12: false
+  });
+
+  assert.equal(result.ok, true);
+
+  if (result.ok) {
+    assert.equal(result.data.lancerExaltedSkillLevel, null);
   }
 });
 
