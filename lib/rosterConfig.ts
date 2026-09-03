@@ -9,7 +9,7 @@ export const ROSTER_CONFIG = {
   fcLevels: ["FC5", "FC6", "FC7", "FC8", "FC9", "FC10"],
   exaltedSkillLevels: ["0", "1", "2", "3"],
   troopTypes: ["Infantry", "Lancer", "Marksmen"],
-  joinHeroOptions: ["Norah", "Hendrik", "Gatot", "Renee", "Mia", "Wu Ming", "Gordan"]
+  joinHeroOptions: ["Renee", "Mia", "Hendrik", "Reina", "Gatot", "Norah"]
 } as const;
 
 export type EventType = (typeof ROSTER_CONFIG.eventTypes)[number];

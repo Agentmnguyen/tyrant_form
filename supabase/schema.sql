@@ -206,14 +206,14 @@ alter table public.participation_entries
 
 alter table public.participation_entries
   add constraint participation_entries_join_heroes_check check (
-    join_heroes <@ array['Norah', 'Hendrik', 'Gatot', 'Renee', 'Mia', 'Wu Ming', 'Gordan']::text[]
+    join_heroes <@ array['Renee', 'Mia', 'Hendrik', 'Reina', 'Gatot', 'Norah']::text[]
   );
 
 update public.participation_entries
 set join_heroes = (
   select coalesce(array_agg(distinct hero order by hero), '{}'::text[])
   from unnest(rally_join_heroes || defense_join_heroes) as hero
-  where hero in ('Norah', 'Hendrik', 'Gatot', 'Renee', 'Mia', 'Wu Ming', 'Gordan')
+  where hero in ('Renee', 'Mia', 'Hendrik', 'Reina', 'Gatot', 'Norah')
 )
 where cardinality(join_heroes) = 0
   and (cardinality(rally_join_heroes) > 0 or cardinality(defense_join_heroes) > 0);
