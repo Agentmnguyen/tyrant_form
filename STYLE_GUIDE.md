@@ -1,6 +1,6 @@
-# 1474 Event Roster Style Guide
+# 1453 Event Roster Style Guide
 
-This guide documents the shared visual system found in the SVS Prep app and the Tundra Arms League app. Use it for the 1474 Event Roster without carrying over unrelated event-specific business logic.
+This guide documents the shared visual system found in the SVS Prep app and the Tundra Arms League app. Use it for the 1453 Event Roster without carrying over unrelated event-specific business logic.
 
 ## Core Feel
 

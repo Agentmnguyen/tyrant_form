@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": `attachment; filename=1474-event-roster-${exportType}.csv`
+        "Content-Disposition": `attachment; filename=1453-event-roster-${exportType}.csv`
       }
     });
   } catch (error) {

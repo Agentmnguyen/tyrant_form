@@ -1,5 +1,5 @@
 export const ROSTER_CONFIG = {
-  appName: "1474 Event Roster",
+  appName: "1453 Event Roster",
   masterPlayersSheetName: "MASTER_PLAYERS",
   masterParticipationSheetName: "MASTER_PARTICIPATION",
   eventTypes: ["SVS", "Frost Dragon Tyrant"],

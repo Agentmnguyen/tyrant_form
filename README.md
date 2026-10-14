@@ -1,6 +1,6 @@
-# 1474 Event Roster
+# 1453 Event Roster
 
-Next.js App Router app for shared 1474 event participation tracking across SVS and Frost Dragon Tyrant.
+Next.js App Router app for shared 1453 event participation tracking across SVS and Frost Dragon Tyrant.
 
 ## Features
 

@@ -1,6 +1,6 @@
 create extension if not exists pgcrypto;
 
--- 1474 Event Roster normalized schema.
+-- 1453 Event Roster normalized schema.
 -- Migration risk note:
 --   This schema creates new normalized tables and does not drop the older tyrant_* tables.
 --   The optional migration block below copies existing tyrant data into the new tables when

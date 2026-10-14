@@ -3,8 +3,8 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "1474 Event Roster",
-  description: "1474 event participation roster for players, events, and readiness"
+  title: "1453 Event Roster",
+  description: "1453 event participation roster for players, events, and readiness"
 };
 
 export const viewport: Viewport = {

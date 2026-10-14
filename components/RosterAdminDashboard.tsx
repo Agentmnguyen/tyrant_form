@@ -360,7 +360,7 @@ export function RosterAdminDashboard() {
       const url = window.URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `1474-event-roster-${exportType}.csv`;
+      anchor.download = `1453-event-roster-${exportType}.csv`;
       anchor.click();
       window.URL.revokeObjectURL(url);
       setMessage({ type: "success", text: "CSV exported." });
@@ -411,7 +411,7 @@ export function RosterAdminDashboard() {
 
   return (
     <main className="app-shell wide">
-      <Hero title={ROSTER_CONFIG.appName} subtitle="Manage 1474 players, active events, participation entries, and reporting sync." />
+      <Hero title={ROSTER_CONFIG.appName} subtitle="Manage 1453 players, active events, participation entries, and reporting sync." />
 
       {message && <div className={`message ${message.type}`}>{message.text}</div>}
       {confirmDialog && (
