@@ -1176,12 +1176,11 @@ button:focus-visible {
   font-weight: 900;
 }
 
-.alliance-badge.std { color: #b9efff; border-color: rgba(67, 215, 255, 0.45); }
-.alliance-badge.loc { color: #b6f7d0; border-color: rgba(96, 243, 180, 0.45); }
-.alliance-badge.hpy { color: #f8d9ff; border-color: rgba(228, 128, 255, 0.45); }
+.alliance-badge.sfs { color: #b9efff; border-color: rgba(67, 215, 255, 0.45); }
+.alliance-badge.zro { color: #b6f7d0; border-color: rgba(96, 243, 180, 0.45); }
+.alliance-badge.lgn { color: #f8d9ff; border-color: rgba(228, 128, 255, 0.45); }
 .alliance-badge.tex { color: #ffe0a3; border-color: rgba(255, 200, 87, 0.5); }
-.alliance-badge.ngl { color: #d0dcff; border-color: rgba(140, 164, 255, 0.45); }
-.alliance-badge.die { color: #ffb2ab; border-color: rgba(255, 123, 114, 0.45); }
+.alliance-badge[class~="academy/other"] { color: #d0dcff; border-color: rgba(140, 164, 255, 0.45); }
 
 .empty {
   color: var(--muted);

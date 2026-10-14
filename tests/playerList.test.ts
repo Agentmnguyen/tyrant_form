@@ -14,7 +14,7 @@ function makePlayer(overrides: Partial<Player> = {}): Player {
     playerId: "10001",
     normalizedPlayerId: "10001",
     playerName: "Alpha",
-    alliance: "STD",
+    alliance: "SFS",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     ...overrides
@@ -106,7 +106,7 @@ test("buildPlayerStats derives count and last participation from entries", () =>
 test("filterPlayers matches name, id, and alliance independently", () => {
   const players = buildPlayerStats(
     [
-      makePlayer({ id: "1", playerName: "Alpha One", playerId: "10001", alliance: "STD" }),
+      makePlayer({ id: "1", playerName: "Alpha One", playerId: "10001", alliance: "SFS" }),
       makePlayer({ id: "2", playerName: "Beta Two", playerId: "20002", alliance: "LOC" })
     ],
     []

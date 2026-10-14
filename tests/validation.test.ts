@@ -9,7 +9,7 @@ const validForm: ParticipationForm = {
   eventId: "event-1",
   playerName: "Mick",
   playerGameId: "12345",
-  alliance: "STD",
+  alliance: "SFS",
   availability: "Full Event",
   infantryFcLevel: "FC8",
   infantryHelios: true,
@@ -32,7 +32,7 @@ const testPlayer: Player = {
   playerId: "12345",
   normalizedPlayerId: "12345",
   playerName: "Mick",
-  alliance: "STD",
+  alliance: "SFS",
   createdAt: "2026-05-01T00:00:00.000Z",
   updatedAt: "2026-05-01T00:00:00.000Z"
 };

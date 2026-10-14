@@ -4,7 +4,7 @@ export const ROSTER_CONFIG = {
   masterParticipationSheetName: "MASTER_PARTICIPATION",
   eventTypes: ["SVS", "Frost Dragon Tyrant"],
   eventStatuses: ["draft", "open", "locked", "archived"],
-  alliances: ["STD", "LOC", "HPY", "TEX", "NGL", "DIE"],
+  alliances: ["SFS", "ZRO", "LGN", "TEX", "Academy/Other"],
   availabilityOptions: ["Full Event", "3-4 hours", "2-3 hours", "Casual / Under 2 hours"],
   fcLevels: ["FC5", "FC6", "FC7", "FC8", "FC9", "FC10"],
   exaltedSkillLevels: ["0", "1", "2", "3"],

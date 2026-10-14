@@ -29,7 +29,7 @@ create table if not exists public.players (
   constraint players_player_id_check check (length(trim(player_id)) > 0),
   constraint players_normalized_player_id_check check (length(trim(normalized_player_id)) > 0),
   constraint players_player_name_check check (length(trim(player_name)) > 0),
-  constraint players_alliance_check check (alliance in ('STD', 'LOC', 'HPY', 'TEX', 'NGL', 'DIE'))
+  constraint players_alliance_check check (alliance in ('SFS', 'ZRO', 'LGN', 'TEX', 'Academy/Other'))
 );
 
 create unique index if not exists players_normalized_player_id_unique_idx
@@ -37,6 +37,11 @@ create unique index if not exists players_normalized_player_id_unique_idx
 
 create index if not exists players_player_name_idx on public.players (lower(player_name));
 create index if not exists players_alliance_idx on public.players (alliance);
+
+-- Existing databases: replace the old alliance list. NOT VALID leaves legacy rows alone but enforces the new list on writes.
+alter table public.players drop constraint if exists players_alliance_check;
+alter table public.players add constraint players_alliance_check
+  check (alliance in ('SFS', 'ZRO', 'LGN', 'TEX', 'Academy/Other')) not valid;
 
 create table if not exists public.events (
   id uuid primary key default gen_random_uuid(),
