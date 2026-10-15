@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, Lock, Send } from "lucide-react";
 import { ChoiceToggle, Field, SelectField, TextInput } from "@/components/FormControls";
+import { LanguageProvider, LanguageSelect, useLanguage } from "@/components/LanguageProvider";
 import { Button, Hero, cx } from "@/components/ui";
 import { voiceCallSummary } from "@/lib/format";
 import { ROSTER_CONFIG, type JoinHeroOption } from "@/lib/rosterConfig";
@@ -22,6 +23,15 @@ type Message = {
 const stepNames = ["Player Info", "Availability", "Troops", "Heroes", "Review"];
 
 export function RosterSignupWizard() {
+  return (
+    <LanguageProvider>
+      <SignupWizard />
+    </LanguageProvider>
+  );
+}
+
+function SignupWizard() {
+  const { t } = useLanguage();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<ParticipationForm>(initialParticipationForm);
   const [message, setMessage] = useState<Message>(null);
@@ -34,7 +44,8 @@ export function RosterSignupWizard() {
   const selectedEvent = openEvent;
   const progress = useMemo(() => `${((Math.min(step + 1, stepNames.length) / stepNames.length) * 100).toFixed(0)}%`, [step]);
   const validation = validateForm(form);
-  const fieldErrors = !validation.ok && errorStep === step ? validation.fieldErrors : {};
+  const rawFieldErrors = !validation.ok && errorStep === step ? validation.fieldErrors : {};
+  const fieldErrors = Object.fromEntries(Object.entries(rawFieldErrors).map(([key, value]) => [key, t(value)]));
 
   useEffect(() => {
     let active = true;
@@ -141,17 +152,18 @@ export function RosterSignupWizard() {
   if (submitted) {
     return (
       <main className="app-shell narrow">
+        <LanguageSelect />
         <Hero
-          title="Participation saved"
-          subtitle="Your availability, troop readiness, and hero readiness were saved."
+          title={t("Participation saved")}
+          subtitle={t("Your availability, troop readiness, and hero readiness were saved.")}
           pill={submitted.event.name}
         />
         <section className="panel confirmation-panel">
           <CheckCircle2 aria-hidden="true" />
-          <h2>All set</h2>
-          <p>Your event participation entry has been saved successfully.</p>
+          <h2>{t("All set")}</h2>
+          <p>{t("Your event participation entry has been saved successfully.")}</p>
           <Button variant="primary" onClick={reset}>
-            Submit another entry
+            {t("Submit another entry")}
           </Button>
         </section>
       </main>
@@ -160,26 +172,27 @@ export function RosterSignupWizard() {
 
   return (
     <main className="app-shell narrow">
+      <LanguageSelect />
       <Hero
         title={ROSTER_CONFIG.appName}
-        subtitle="Submit your participation for the currently open event."
-        pill={selectedEvent ? selectedEvent.name : "Event participation"}
+        subtitle={t("Submit your participation for the currently open event.")}
+        pill={selectedEvent ? selectedEvent.name : t("Event participation")}
       />
 
       {statusLoading && (
         <section className="panel state-panel">
           <div className="loading-dot" />
-          <h2>Checking active events</h2>
-          <p>Loading the open event before showing the participation form.</p>
+          <h2>{t("Checking active events")}</h2>
+          <p>{t("Loading the open event before showing the participation form.")}</p>
         </section>
       )}
 
       {!statusLoading && !openEvent && (
         <section className="panel state-panel closed">
           <Lock aria-hidden="true" />
-          <h2>No events are open</h2>
-          <p>There are no public participation forms open right now. Check with leadership before trying again.</p>
-          {message && <div className={`message ${message.type}`}>{message.text}</div>}
+          <h2>{t("No events are open")}</h2>
+          <p>{t("There are no public participation forms open right now. Check with leadership before trying again.")}</p>
+          {message && <div className={`message ${message.type}`}>{t(message.text)}</div>}
         </section>
       )}
 
@@ -187,10 +200,10 @@ export function RosterSignupWizard() {
         <>
           <div className="progress-card">
             <div className="progress-label">
-              <span>Step {step + 1} of {stepNames.length}</span>
-              <strong>{stepNames[step]}</strong>
+              <span>{t("Step {n} of {total}", { n: step + 1, total: stepNames.length })}</span>
+              <strong>{t(stepNames[step])}</strong>
             </div>
-            <div className="progress-track" aria-label={`${progress} complete`}>
+            <div className="progress-track" aria-label={t("{progress} complete", { progress })}>
               <span style={{ width: progress }} />
             </div>
           </div>
@@ -204,24 +217,24 @@ export function RosterSignupWizard() {
               {step === 4 && <ReviewStep event={selectedEvent} form={form} onEdit={setStep} />}
             </div>
 
-            {message && <div className={`message ${message.type}`}>{message.text}</div>}
+            {message && <div className={`message ${message.type}`}>{t(message.text)}</div>}
 
             <div className={cx("wizard-actions", step === 0 && "single")}>
               {step > 0 && (
                 <Button variant="secondary" onClick={() => setStep((current) => current - 1)} disabled={submitting}>
                   <ChevronLeft aria-hidden="true" />
-                  Back
+                  {t("Back")}
                 </Button>
               )}
               <Button variant="primary" onClick={goNext} disabled={submitting}>
                 {step === stepNames.length - 1 ? (
                   <>
                     <Send aria-hidden="true" />
-                    {submitting ? "Submitting" : "Submit"}
+                    {submitting ? t("Submitting") : t("Submit")}
                   </>
                 ) : (
                   <>
-                    Next
+                    {t("Next")}
                     <ChevronRight aria-hidden="true" />
                   </>
                 )}
@@ -243,20 +256,22 @@ function PlayerInfoStep({
   errors: Record<string, string>;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="step-stack">
-      <StepTitle title="Player Information" />
-      <Field label="Player Name" error={errors.playerName}>
+      <StepTitle title={t("Player Information")} />
+      <Field label={t("Player Name")} error={errors.playerName}>
         <TextInput value={form.playerName} onChange={(event) => update("playerName", event.target.value)} autoComplete="nickname" />
       </Field>
-      <Field label="Player ID" error={errors.playerGameId}>
+      <Field label={t("Player ID")} error={errors.playerGameId}>
         <TextInput value={form.playerGameId} onChange={(event) => update("playerGameId", event.target.value)} inputMode="numeric" />
       </Field>
-      <Field label="Alliance" error={errors.alliance}>
+      <Field label={t("Alliance")} error={errors.alliance}>
         <SelectField
-          placeholder="Choose alliance"
+          placeholder={t("Choose alliance")}
           value={form.alliance}
-          options={ROSTER_CONFIG.alliances.map((alliance) => ({ value: alliance, label: alliance }))}
+          options={ROSTER_CONFIG.alliances.map((alliance) => ({ value: alliance, label: t(alliance) }))}
           onChange={(event) => update("alliance", event.target.value as ParticipationForm["alliance"])}
         />
       </Field>
@@ -273,13 +288,15 @@ function AvailabilityStep({
   errors: Record<string, string>;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="step-stack">
-      <StepTitle title="Availability" note="Choose the closest estimate for this event." />
+      <StepTitle title={t("Availability")} note={t("Choose the closest estimate for this event.")} />
       <div className="choice-grid">
         {ROSTER_CONFIG.availabilityOptions.map((option) => (
           <ChoiceToggle key={option} selected={form.availability === option} onClick={() => update("availability", option)}>
-            {option}
+            {t(option)}
           </ChoiceToggle>
         ))}
       </div>
@@ -297,12 +314,14 @@ function TroopsStep({
   errors: Record<string, string>;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <div className="step-stack">
-      <StepTitle title="Troops" />
+      <StepTitle title={t("Troops")} />
       <div className="troop-strength-grid">
         <TroopSection
-          label="Infantry"
+          label={t("Infantry")}
           fcField="infantryFcLevel"
           heliosField="infantryHelios"
           exaltedT12Field="infantryExaltedT12"
@@ -316,7 +335,7 @@ function TroopsStep({
           update={update}
         />
         <TroopSection
-          label="Lancer"
+          label={t("Lancer")}
           fcField="lancerFcLevel"
           heliosField="lancerHelios"
           exaltedT12Field="lancerExaltedT12"
@@ -330,7 +349,7 @@ function TroopsStep({
           update={update}
         />
         <TroopSection
-          label="Marksmen"
+          label={t("Marksmen")}
           fcField="marksmenFcLevel"
           heliosField="marksmenHelios"
           exaltedT12Field="marksmenExaltedT12"
@@ -375,12 +394,14 @@ function TroopSection({
   skillLevelError?: string;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
+  const { t } = useLanguage();
+
   return (
     <section className="troop-strength-card">
       <h3>{label}</h3>
-      <Field label="FC Level" error={error}>
+      <Field label={t("FC Level")} error={error}>
         <SelectField
-          placeholder="Choose FC level"
+          placeholder={t("Choose FC level")}
           value={fcValue}
           options={ROSTER_CONFIG.fcLevels.map((level) => ({ value: level, label: level }))}
           onChange={(event) => update(fcField, event.target.value as ParticipationForm[typeof fcField])}
@@ -390,10 +411,10 @@ function TroopSection({
         <span className="field-label">Helios?</span>
         <div className="choice-grid two compact-choice-grid">
           <ChoiceToggle selected={heliosValue} onClick={() => update(heliosField, true)}>
-            Yes
+            {t("Yes")}
           </ChoiceToggle>
           <ChoiceToggle selected={!heliosValue} onClick={() => update(heliosField, false)}>
-            No
+            {t("No")}
           </ChoiceToggle>
         </div>
       </div>
@@ -401,7 +422,7 @@ function TroopSection({
         <span className="field-label">Exalted T12</span>
         <div className="choice-grid two compact-choice-grid">
           <ChoiceToggle selected={exaltedT12Value} onClick={() => update(exaltedT12Field, true)}>
-            Yes
+            {t("Yes")}
           </ChoiceToggle>
           <ChoiceToggle
             selected={!exaltedT12Value}
@@ -410,14 +431,14 @@ function TroopSection({
               update(exaltedSkillLevelField, "");
             }}
           >
-            No
+            {t("No")}
           </ChoiceToggle>
         </div>
       </div>
       {exaltedT12Value && (
-        <Field label="Skill Level" error={skillLevelError}>
+        <Field label={t("Skill Level")} error={skillLevelError}>
           <SelectField
-            placeholder="Choose skill level"
+            placeholder={t("Choose skill level")}
             value={exaltedSkillLevelValue}
             options={ROSTER_CONFIG.exaltedSkillLevels.map((level) => ({ value: level, label: level }))}
             onChange={(event) =>
@@ -439,6 +460,8 @@ function HeroesStep({
   errors: Record<string, string>;
   update: <K extends keyof ParticipationForm>(key: K, value: ParticipationForm[K]) => void;
 }) {
+  const { t } = useLanguage();
+
   function toggleJoinHero(hero: JoinHeroOption) {
     update("joinHeroes", toggleHeroSelection(form.joinHeroes, hero));
   }
@@ -446,21 +469,21 @@ function HeroesStep({
   return (
     <div className="step-stack">
       <HeroChoiceSection
-        title="Rally / Defense Heroes"
-        subtitle="Select all heroes at 4★ with Level 5 Expedition Skill."
+        title={t("Rally / Defense Heroes")}
+        subtitle={t("Select all heroes at 4★ with Level 5 Expedition Skill.")}
         options={ROSTER_CONFIG.joinHeroOptions}
         selected={form.joinHeroes}
         onToggle={toggleJoinHero}
       />
       {errors.joinHeroes && <small className="field-error">{errors.joinHeroes}</small>}
       <div className="field-block">
-        <span className="field-label">Do you plan to join Voice Call?</span>
+        <span className="field-label">{t("Do you plan to join Voice Call?")}</span>
         <div className="choice-grid two compact-choice-grid">
           <ChoiceToggle selected={form.joinVoiceCall === true} onClick={() => update("joinVoiceCall", true)}>
-            Yes
+            {t("Yes")}
           </ChoiceToggle>
           <ChoiceToggle selected={form.joinVoiceCall === false} onClick={() => update("joinVoiceCall", false)}>
-            No
+            {t("No")}
           </ChoiceToggle>
         </div>
       </div>
@@ -469,29 +492,30 @@ function HeroesStep({
 }
 
 function ReviewStep({ form, event, onEdit }: { form: ParticipationForm; event: RosterEvent | null; onEdit: (step: number) => void }) {
+  const { t } = useLanguage();
   const rows = [
-    ["Event", event?.name || "Not selected", 0],
+    ["Event", event?.name || t("Not selected"), 0],
     ["Player Name", form.playerName, 0],
     ["Player ID", form.playerGameId, 0],
-    ["Alliance", form.alliance, 0],
-    ["Availability", form.availability, 1],
-    ["Infantry", troopReview(form.infantryFcLevel, form.infantryHelios, form.infantryExaltedT12, form.infantryExaltedSkillLevel), 2],
-    ["Lancer", troopReview(form.lancerFcLevel, form.lancerHelios, form.lancerExaltedT12, form.lancerExaltedSkillLevel), 2],
-    ["Marksmen", troopReview(form.marksmenFcLevel, form.marksmenHelios, form.marksmenExaltedT12, form.marksmenExaltedSkillLevel), 2],
-    ["Rally / Defense Heroes", heroReview(form.joinHeroes), 3],
-    ["Voice Call", voiceCallSummary(form.joinVoiceCall), 3]
+    ["Alliance", form.alliance ? t(form.alliance) : "", 0],
+    ["Availability", form.availability ? t(form.availability) : "", 1],
+    ["Infantry", troopReview(t, form.infantryFcLevel, form.infantryHelios, form.infantryExaltedT12, form.infantryExaltedSkillLevel), 2],
+    ["Lancer", troopReview(t, form.lancerFcLevel, form.lancerHelios, form.lancerExaltedT12, form.lancerExaltedSkillLevel), 2],
+    ["Marksmen", troopReview(t, form.marksmenFcLevel, form.marksmenHelios, form.marksmenExaltedT12, form.marksmenExaltedSkillLevel), 2],
+    ["Rally / Defense Heroes", heroReview(t, form.joinHeroes), 3],
+    ["Voice Call", t(voiceCallSummary(form.joinVoiceCall)), 3]
   ] as const;
 
   return (
     <div className="step-stack">
-      <StepTitle title="Review & Submit" note="Check your participation entry before final submission." />
+      <StepTitle title={t("Review & Submit")} note={t("Check your participation entry before final submission.")} />
       <div className="review-grid">
         {rows.map(([label, value, editStep]) => (
           <div className="kv" key={label}>
-            <span>{label}</span>
+            <span>{t(label)}</span>
             <strong>{value}</strong>
             <button type="button" onClick={() => onEdit(editStep)}>
-              Edit
+              {t("Edit")}
             </button>
           </div>
         ))}
@@ -527,13 +551,15 @@ function HeroChoiceSection<T extends string>({
   );
 }
 
-function troopReview(fcLevel: string, helios: boolean, exaltedT12: boolean, exaltedSkillLevel: string) {
-  const exalted = exaltedT12 ? `Yes${exaltedSkillLevel ? ` (Skill ${exaltedSkillLevel})` : ""}` : "No";
-  return `${fcLevel || "Not selected"} / Helios: ${helios ? "Yes" : "No"} / Exalted T12: ${exalted}`;
+type Translate = (text: string) => string;
+
+function troopReview(t: Translate, fcLevel: string, helios: boolean, exaltedT12: boolean, exaltedSkillLevel: string) {
+  const exalted = exaltedT12 ? `${t("Yes")}${exaltedSkillLevel ? ` (${t("Skill")} ${exaltedSkillLevel})` : ""}` : t("No");
+  return `${fcLevel || t("Not selected")} / Helios: ${helios ? t("Yes") : t("No")} / Exalted T12: ${exalted}`;
 }
 
-function heroReview(heroes: readonly string[]) {
-  return heroes.length > 0 ? heroes.join(", ") : "None selected";
+function heroReview(t: Translate, heroes: readonly string[]) {
+  return heroes.length > 0 ? heroes.join(", ") : t("None selected");
 }
 
 function StepTitle({ title, note }: { title: string; note?: string }) {

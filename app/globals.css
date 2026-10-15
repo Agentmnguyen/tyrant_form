@@ -128,6 +128,30 @@ button:focus-visible {
   max-width: 760px;
 }
 
+.language-select {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.language-select label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.language-select select {
+  width: auto;
+  min-height: 40px;
+  padding: 8px 40px 8px 12px;
+  background-position:
+    calc(100% - 20px) 17px,
+    calc(100% - 14px) 17px;
+}
+
 .hero {
   overflow: hidden;
   border: 1px solid var(--line);

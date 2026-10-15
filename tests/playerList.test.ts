@@ -74,7 +74,7 @@ function makeEntry(overrides: Partial<ParticipationEntry> = {}): ParticipationEn
 
 test("buildPlayerStats derives count and last participation from entries", () => {
   const alpha = makePlayer({ id: "player-alpha", playerName: "Alpha" });
-  const beta = makePlayer({ id: "player-beta", playerName: "Beta", playerId: "20002", alliance: "LOC" });
+  const beta = makePlayer({ id: "player-beta", playerName: "Beta", playerId: "20002", alliance: "ZRO" });
   const eventTwo = makeEvent({ id: "event-2", name: "SVS - Feb 2026" });
 
   const entries = [
@@ -107,7 +107,7 @@ test("filterPlayers matches name, id, and alliance independently", () => {
   const players = buildPlayerStats(
     [
       makePlayer({ id: "1", playerName: "Alpha One", playerId: "10001", alliance: "SFS" }),
-      makePlayer({ id: "2", playerName: "Beta Two", playerId: "20002", alliance: "LOC" })
+      makePlayer({ id: "2", playerName: "Beta Two", playerId: "20002", alliance: "ZRO" })
     ],
     []
   );
@@ -120,11 +120,11 @@ test("filterPlayers matches name, id, and alliance independently", () => {
   assert.equal(byId.length, 1);
   assert.equal(byId[0]?.playerId, "20002");
 
-  const byAlliance = filterPlayers(players, { nameSearch: "", idSearch: "", alliance: "LOC" });
+  const byAlliance = filterPlayers(players, { nameSearch: "", idSearch: "", alliance: "ZRO" });
   assert.equal(byAlliance.length, 1);
-  assert.equal(byAlliance[0]?.alliance, "LOC");
+  assert.equal(byAlliance[0]?.alliance, "ZRO");
 
-  const combined = filterPlayers(players, { nameSearch: "beta", idSearch: "20002", alliance: "LOC" });
+  const combined = filterPlayers(players, { nameSearch: "beta", idSearch: "20002", alliance: "ZRO" });
   assert.equal(combined.length, 1);
   assert.equal(combined[0]?.id, "2");
 });
