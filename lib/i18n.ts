@@ -2,7 +2,8 @@ export const LANGUAGES = [
   { code: "en", label: "English" },
   { code: "tr", label: "Türkçe" },
   { code: "pt", label: "Português" },
-  { code: "es", label: "Español" }
+  { code: "es", label: "Español" },
+  { code: "de", label: "Deutsch" }
 ] as const;
 
 export type Lang = (typeof LANGUAGES)[number]["code"];
@@ -252,7 +253,83 @@ const es: Dictionary = {
   "Unable to save participation.": "No se pudo guardar la participación."
 };
 
-const DICTIONARIES: Record<Lang, Dictionary> = { en: {}, tr, pt, es };
+const de: Dictionary = {
+  "Language": "Sprache",
+  "Submit your participation for the currently open event.": "Reiche deine Teilnahme für das aktuell geöffnete Event ein.",
+  "Event participation": "Event-Teilnahme",
+  "Participation saved": "Teilnahme gespeichert",
+  "Participation saved.": "Teilnahme gespeichert.",
+  "Your availability, troop readiness, and hero readiness were saved.": "Deine Verfügbarkeit, Truppenbereitschaft und Heldenbereitschaft wurden gespeichert.",
+  "All set": "Alles erledigt",
+  "Your event participation entry has been saved successfully.": "Deine Event-Teilnahme wurde erfolgreich gespeichert.",
+  "Submit another entry": "Weiteren Eintrag senden",
+  "Checking active events": "Aktive Events werden geprüft",
+  "Loading the open event before showing the participation form.": "Das offene Event wird geladen, bevor das Teilnahmeformular angezeigt wird.",
+  "No events are open": "Keine Events geöffnet",
+  "There are no public participation forms open right now. Check with leadership before trying again.": "Derzeit sind keine Teilnahmeformulare geöffnet. Frage bei der Führung nach, bevor du es erneut versuchst.",
+  "Step {n} of {total}": "Schritt {n} von {total}",
+  "{progress} complete": "{progress} abgeschlossen",
+  "Back": "Zurück",
+  "Next": "Weiter",
+  "Submit": "Senden",
+  "Submitting": "Wird gesendet",
+  "Player Information": "Spielerinformationen",
+  "Player Info": "Spielerdaten",
+  "Player Name": "Spielername",
+  "Player ID": "Spieler-ID",
+  "Alliance": "Allianz",
+  "Choose alliance": "Allianz wählen",
+  "Academy/Other": "Akademie/Andere",
+  "Availability": "Verfügbarkeit",
+  "Choose the closest estimate for this event.": "Wähle die passendste Schätzung für dieses Event.",
+  "Full Event": "Ganzes Event",
+  "3-4 hours": "3-4 Stunden",
+  "2-3 hours": "2-3 Stunden",
+  "Casual / Under 2 hours": "Gelegentlich / Unter 2 Stunden",
+  "Troops": "Truppen",
+  "Infantry": "Infanterie",
+  "Lancer": "Lanzenträger",
+  "Marksmen": "Schützen",
+  "FC Level": "FC-Stufe",
+  "Choose FC level": "FC-Stufe wählen",
+  "Skill Level": "Fähigkeitsstufe",
+  "Choose skill level": "Fähigkeitsstufe wählen",
+  "Skill": "Fähigkeit",
+  "Yes": "Ja",
+  "No": "Nein",
+  "Heroes": "Helden",
+  "Review": "Prüfen",
+  "Rally / Defense Heroes": "Rally- / Verteidigungshelden",
+  "Select all heroes at 4★ with Level 5 Expedition Skill.": "Wähle alle Helden mit 4★ und Expeditionsfähigkeit auf Stufe 5.",
+  "Do you plan to join Voice Call?": "Planst du, dem Sprachanruf beizutreten?",
+  "Review & Submit": "Prüfen und Senden",
+  "Check your participation entry before final submission.": "Prüfe deinen Teilnahmeeintrag vor dem endgültigen Senden.",
+  "Event": "Event",
+  "Not selected": "Nicht ausgewählt",
+  "None selected": "Keine ausgewählt",
+  "Not Provided": "Nicht angegeben",
+  "Voice Call": "Sprachanruf",
+  "Edit": "Bearbeiten",
+  "No event is open for participation.": "Es ist kein Event für die Teilnahme geöffnet.",
+  "Player name is required.": "Der Spielername ist erforderlich.",
+  "Player ID is required.": "Die Spieler-ID ist erforderlich.",
+  "Choose the player's alliance.": "Wähle die Allianz des Spielers.",
+  "Choose availability.": "Wähle die Verfügbarkeit.",
+  "Choose Infantry FC level.": "Wähle die FC-Stufe der Infanterie.",
+  "Choose Lancer FC level.": "Wähle die FC-Stufe der Lanzenträger.",
+  "Choose Marksmen FC level.": "Wähle die FC-Stufe der Schützen.",
+  "Choose Infantry Exalted T12 skill level.": "Wähle die Exalted-T12-Fähigkeitsstufe der Infanterie.",
+  "Choose Lancer Exalted T12 skill level.": "Wähle die Exalted-T12-Fähigkeitsstufe der Lanzenträger.",
+  "Choose Marksmen Exalted T12 skill level.": "Wähle die Exalted-T12-Fähigkeitsstufe der Schützen.",
+  "Choose valid rally / defense heroes.": "Wähle gültige Rally- / Verteidigungshelden.",
+  "Review your participation details.": "Prüfe deine Teilnahmedaten.",
+  "Unable to load the open event.": "Das offene Event konnte nicht geladen werden.",
+  "Unable to submit. Please try again.": "Senden nicht möglich. Bitte versuche es erneut.",
+  "Unable to submit.": "Senden nicht möglich.",
+  "Unable to save participation.": "Teilnahme konnte nicht gespeichert werden."
+};
+
+const DICTIONARIES: Record<Lang, Dictionary> = { en: {}, tr, pt, es, de };
 
 export function translate(lang: Lang, text: string, vars?: Record<string, string | number>) {
   const template = DICTIONARIES[lang][text] ?? text;
